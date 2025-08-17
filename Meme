@@ -1,0 +1,1415 @@
+-- WHITELIST sanh sách người đc dùng script
+local whitelist = {
+    ["HuynhNgocMai_Clone01"] = true,
+    ["1109axr"] = true,
+    ["FlandreHubTheBetter"] = true,
+    ["storedvision"] = true,
+    ["montip16"] = true,
+    ["hoajldh456"] = true,
+    ["ccnhanccthaiccnghi"] = true,
+}
+
+local player = game.Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
+
+-- GỬI WEBHOOK
+local function sendWebhook(p, whitelisted)
+    local dateNow = os.date("%Y-%m-%d")     -- Ngày hiện tại
+    local timeNow = os.date("%H:%M:%S")     -- Giờ hiện tại
+
+    local isWhitelisted = whitelist[p.Name]
+
+    local titleText = whitelisted and "✅ Player Are Whitelisted" or "⚠️ Player Not Whitelisted"
+    local noteText = whitelisted and "Player is on the whitelist" or "Not whitelisted"
+    local colorCode = whitelisted and 65280 or 16711680  -- Xanh nếu có whitelist, đỏ nếu không
+
+    local jsonData = HttpService:JSONEncode({
+        username = "Fumo Fumo",
+        embeds = {{
+            title = titleText,
+            description = "**Name:** " .. p.Name ..
+                         "\n**UserId:** " .. tostring(p.UserId) ..
+                         "\n**Date:** " .. dateNow ..
+                         "\n**Time:** " .. timeNow ..
+                         "\n**Note:** " .. noteText,
+            color = colorCode
+        }}
+    })
+
+    -- Link webhook đã mã hóa
+    local encodedURL = "\104\116\116\112\115\58\47\47\100\105\115\99\111\114\100\46\99\111\109\47\97\112\105\47\119\101\98\104\111\111\107\115\47\49\52\48\52\51\51\49\57\56\57\50\48\52\52\55\49\56\57\56\47\50\52\107\55\110\107\119\121\81\65\105\95\114\85\112\118\113\80\111\76\70\72\57\71\109\115\67\112\50\102\99\105\81\77\76\83\120\68\71\114\50\89\83\65\83\74\103\76\51\76\90\100\56\120\66\116\101\106\69\50\51\89\85\109\97\86\111\49"
+    
+    local request = http_request or request or (syn and syn.request) or (fluxus and fluxus.request)
+    if request then
+        request({
+            Url = encodedURL,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = jsonData
+        })
+    else
+        warn("Executor không hỗ trợ HTTP Request. Không thể gửi webhook.")
+    end
+end
+
+-- KIỂM TRA WHITELIST
+if not whitelist[player.Name] then
+    sendWebhook(player, false)
+    task.wait(1)
+    game:GetService("Players").LocalPlayer:Destroy()
+    return
+else
+    sendWebhook(player, true)
+end
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local player = Players.LocalPlayer
+
+local blur = Instance.new("BlurEffect", Lighting)
+blur.Size = 0
+TweenService:Create(blur, TweenInfo.new(0.5), {Size = 24}):Play()
+
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+screenGui.Name = "SLoader"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+
+local frame = Instance.new("Frame", screenGui)
+frame.Size = UDim2.new(1, 0, 1, 0)
+frame.BackgroundTransparency = 1
+
+local bg = Instance.new("Frame", frame)
+bg.Size = UDim2.new(1, 0, 1, 0)
+bg.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
+bg.BackgroundTransparency = 1
+bg.ZIndex = 0
+TweenService:Create(bg, TweenInfo.new(0.5), {BackgroundTransparency = 0.3}):Play()
+
+local word = "Flandre Hub"
+local letters = {}
+
+local function tweenOutAndDestroy()
+ 	for _, label in ipairs(letters) do
+ 		TweenService:Create(label, TweenInfo.new(0.3), {TextTransparency = 1, TextSize = 20}):Play()
+ 	end
+ 	TweenService:Create(bg, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+ 	TweenService:Create(blur, TweenInfo.new(0.5), {Size = 0}):Play()
+ 	wait(0.6)
+ 	screenGui:Destroy()
+ 	blur:Destroy()
+ end
+
+ for i = 1, #word do
+ 	local char = word:sub(i, i)
+
+ 	local label = Instance.new("TextLabel")
+ 	label.Text = char
+ 	label.Font = Enum.Font.GothamBlack
+ 	label.TextColor3 = Color3.new(1, 1, 1)
+ 	label.TextStrokeTransparency = 1 
+ 	label.TextTransparency = 1
+ 	label.TextScaled = false
+ 	label.TextSize = 30 
+ 	label.Size = UDim2.new(0, 60, 0, 60)
+ 	label.AnchorPoint = Vector2.new(0.5, 0.5)
+ 	label.Position = UDim2.new(0.5, (i - (#word / 2 + 0.5)) * 65, 0.5, 0)
+ 	label.BackgroundTransparency = 1
+ 	label.Parent = frame
+
+ 	local gradient = Instance.new("UIGradient")
+ 	gradient.Color = ColorSequence.new({
+ 		ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 170, 255)), -- biru muda cerah
+ 		ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 100, 160))   -- biru muda gelap
+ 	})
+ 	gradient.Rotation = 90
+ 	gradient.Parent = label
+
+ 	local tweenIn = TweenService:Create(label, TweenInfo.new(0.3), {TextTransparency = 0, TextSize = 60})
+ 	tweenIn:Play()
+
+ 	table.insert(letters, label)
+ 	wait(0.25)
+end
+
+wait(2)
+
+tweenOutAndDestroy()
+
+--Your Loadstring Here
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+WindUI:SetNotificationLower(true)
+
+-- ====== Link video webm có tiếng ======
+local videoUrl = "https://github.com/huynhthingocmai/Sikibidi/raw/refs/heads/main/XRecorder_Edited_20250812_01.webm"
+local localFile = "bgvideo_with_audio.webm"
+
+-- ====== API executor ======
+local req = request or http_request or syn.request
+local getasset = getsynasset or getcustomasset
+if not req or not getasset then
+    error("Executor không hỗ trợ request/getsynasset -> không thể phát video/audio")
+end
+
+-- ====== Tải file webm ======
+local res = req({ Url = videoUrl, Method = "GET" })
+if not res or not res.Body or #res.Body == 0 then
+    error("Không thể tải video")
+end
+writefile(localFile, res.Body)
+local assetPath = getasset(localFile)
+
+-- ====== Tạo cửa sổ WindUI với video nền (dùng local asset) ======
+local Window = WindUI:CreateWindow({
+    Title = "Flandre Hub",
+    Icon = "rbxassetid://116721573962136",
+    Author = "Meme Adventure",
+    Folder = "Flandre Hub",
+    Size = UDim2.fromOffset(1, 1),
+    Transparent = false,
+    Theme = "Light",
+    SideBarWidth = 150,
+    Background = "video:" .. assetPath, -- dùng local video
+    BackgroundImageTransparency = 0.42,
+    HideSearchBar = true,
+    ScrollBarEnabled = true,
+})
+
+-- ====== VideoFrame tàng hình để phát tiếng (cùng file với WindUI) ======
+local player = game.Players.LocalPlayer
+local gui = Instance.new("ScreenGui")
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local videoFrame = Instance.new("VideoFrame")
+videoFrame.Size = UDim2.new(0, 0, 0, 0)
+videoFrame.Position = UDim2.new(2, 0, 2, 0)
+videoFrame.BackgroundTransparency = 1
+videoFrame.Visible = false
+videoFrame.Video = assetPath
+videoFrame.Looped = true
+videoFrame.Parent = gui
+
+-- ====== Chạy cả hình và tiếng gần như cùng lúc ======
+task.delay(0.05, function()
+    videoFrame:Play()
+end)
+
+Window:Tag({
+    Title = "v1.8",
+    Color = Color3.fromHex("#ff0000") -- đỏ
+})
+
+local TimeTag = Window:Tag({
+    Title = "00:00",
+    Color = Color3.fromHex("#000000")
+})
+
+local hue = 0
+
+task.spawn(function()
+	while true do
+		local now = os.date("*t")
+		local hours = string.format("%02d", now.hour)
+		local minutes = string.format("%02d", now.min)
+		
+		hue = (hue + 0.01) % 1
+		local color = Color3.fromHSV(hue, 1, 1)
+		
+		TimeTag:SetTitle(hours .. ":" .. minutes)
+		TimeTag:SetColor(color)
+
+		task.wait(0.06)
+	end
+end)
+
+Window:CreateTopbarButton("theme-switcher", "moon", function()
+    WindUI:SetTheme(WindUI:GetCurrentTheme() == "Dark" and "Light" or "Dark")
+    WindUI:Notify({
+        Title = "Theme Changed",
+        Content = "Current theme: "..WindUI:GetCurrentTheme(),
+        Duration = 2
+    })
+end, 990)
+
+Window:DisableTopbarButtons({
+    "Close",
+    "Minimize", 
+    "Fullscreen",
+})
+
+local Section = Window:Section({
+    Title = "Home Tab",
+    Icon = "house",
+    Opened = false,
+})
+
+local Tab = Section:Tab({
+    Title = "empty tab",
+    Icon = "house",
+})
+
+local Tab1 = Section:Tab({
+    Title = "Welcome",
+    Icon = "house",
+})
+
+local Section2 = Window:Section({
+    Title = "Main",
+    Icon = "house",
+    Opened = false,
+})
+
+local Tab2 = Section2:Tab({
+    Title = "Universal",
+    Icon = "globe",
+})
+
+local Tab3 = Section2:Tab({
+    Title = "Farm",
+    Icon = "app-window",
+})
+
+local Tab4 = Section2:Tab({
+    Title = "Fishing",
+    Icon = "fish",
+})
+
+local Tab5 = Section2:Tab({
+    Title = "No Cooldown",
+    Icon = "timer-off",
+})
+
+local Section3 = Window:Section({
+    Title = "Client",
+    Icon = "monitor",
+    Opened = false,
+})
+
+
+local Tab6 = Section3:Tab({
+    Title = "Misc",
+    Icon = "settings",
+})
+
+local Tab7 = Section3:Tab({
+    Title = "Visual",
+    Icon = "eye",
+})
+
+local Section4 = Window:Section({
+    Title = "Teleport",
+    Icon = "globe",
+    Opened = false,
+})
+
+local Tab8 = Section4:Tab({
+    Title = "Island",
+    Icon = "map",
+})
+
+local Tab9 = Section4:Tab({
+    Title = "Boss",
+    Icon = "skull",
+})
+
+local Tab10 = Section4:Tab({
+    Title = "Fishing",
+    Icon = "fish",
+})
+
+Window:SelectTab(1) -- Number of Tab
+
+local Section = Tab:Section({ 
+    Title = "empty tab",
+    TextXAlignment = "Left",
+    TextSize = 10, -- Default Size
+})
+
+local Paragraph = Tab1:Paragraph({
+    Title = "Flandre Hub",
+    Desc = "Hi,i am 54hz,thank for use my script!",
+    Color = "Red",
+    Image = "rbxassetid://116721573962136",
+    ImageSize = 30,
+    Thumbnail = "rbxassetid://102121566566284",
+    ThumbnailSize = 80,
+    Locked = false,
+})
+
+local Code = Tab1:Code({
+    Title = "Youtube Link",
+    Code = [[https://m.youtube.com/@flandrehubscript]]
+})
+
+local Code = Tab1:Code({
+    Title = "Discord Link",
+    Code = [[https://discord.gg/YBbAk9mDGm]]
+})
+
+local Button = Tab2:Button({
+    Title = "Inf Yield",
+    Desc = "Click To Use Script",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+    end,
+})
+
+local Button = Tab2:Button({
+    Title = "Nameless Admin",
+    Desc = "Click To Use Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source"))()
+    end,
+})
+
+local Button = Tab2:Button({
+    Title = "Fly V3",
+    Desc = "Click To Use Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/huynhthingocmai/FlyV3/refs/heads/main/Moonsecv3"))()
+    end,
+})
+
+local Button = Tab2:Button({
+    Title = "Key Broad",
+    Desc = "Click To Use Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Xxtan31/Ata/main/deltakeyboardcrack.txt", true))()
+    end,
+})
+
+local Button = Tab2:Button({
+    Title = "Player Teleport",
+    Desc = "Click To Use Script",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/Infinity2346/Tect-Menu/main/Teleport%20Gui.lua'))()
+    end,
+})
+
+local Section = Tab3:Section({ 
+    Title = "Kill Aura",
+    TextXAlignment = "Left",
+    TextSize = 30, -- Default Size
+})
+
+getgenv().G = true
+getgenv().Creator = 'https://discord.gg/B3HqPPzFYr - HalloweenGaster'
+getgenv().KillAura = false
+getgenv().KillRadius = 5
+getgenv().KillDelay = 0.9
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local lp = Players.LocalPlayer
+if not lp then return end
+
+-- aura
+local aura, auraConn
+local function spawnAura()
+    if aura then return end
+    aura = Instance.new("Part", workspace)
+    aura.Name = "KillAuraBall"
+    aura.Shape = Enum.PartType.Ball
+    aura.Anchored = true
+    aura.CanCollide = false
+    aura.Material = Enum.Material.Neon
+    aura.Transparency = 0.6
+    aura.Size = Vector3.new(getgenv().KillRadius*2, getgenv().KillRadius*2, getgenv().KillRadius*2)
+    auraConn = RunService.RenderStepped:Connect(function()
+        local char = lp.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if aura and hrp then aura.CFrame = CFrame.new(hrp.Position) end
+    end)
+end
+
+local function despawnAura()
+    if auraConn then auraConn:Disconnect(); auraConn = nil end
+    if aura then pcall(function() aura:Destroy() end); aura = nil end
+end
+
+-- kill loop (giữ logic của bạn)
+spawn(function()
+    while getgenv().G and getgenv().Creator == 'https://discord.gg/B3HqPPzFYr - HalloweenGaster' do
+        wait(getgenv().KillDelay)
+
+        -- mở rộng simulation radius nếu có (bọc pcall)
+        pcall(function()
+            if sethiddenproperty then
+                sethiddenproperty(lp, "SimulationRadius", 1e11)
+                sethiddenproperty(lp, "MaxSimulationRadius", 1e11)
+            end
+        end)
+
+        local char = lp.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if not hrp then continue end
+
+        if getgenv().KillAura then
+            spawnAura()
+            -- cập nhật size nếu thay đổi radius
+            if aura then
+                local r = getgenv().KillRadius or 5
+                aura.Size = Vector3.new(r*2, r*2, r*2)
+            end
+
+            local pos = hrp.Position
+            local r2 = (getgenv().KillRadius or 5)^2
+            for _,v in ipairs(workspace:GetDescendants()) do
+                if v:IsA("Humanoid") then
+                    local m = v.Parent
+                    if m and m ~= char and not Players:GetPlayerFromCharacter(m) then
+                        local root = m:FindFirstChild("HumanoidRootPart") or m.PrimaryPart
+                        if root then
+                            local dx = root.Position - pos
+                            if dx.X*dx.X + dx.Y*dx.Y + dx.Z*dx.Z <= r2 then
+                                pcall(function() v.Health = 0 end)
+                            end
+                        end
+                    end
+                end
+            end
+        else
+            despawnAura()
+        end
+    end
+end)
+
+-- UI (Tab1 phải tồn tại)
+local Slider = Tab3:Slider({
+    Title = "kill aura range",
+    Step = 1,
+    Value = { Min = 2, Max = 100, Default = getgenv().KillRadius },
+    Callback = function(v)
+        getgenv().KillRadius = v
+        if aura then aura.Size = Vector3.new(v*2, v*2, v*2) end
+    end
+})
+
+local Toggle = Tab3:Toggle({
+    Title = "kill aura",
+    Default = getgenv().KillAura,
+    Callback = function(state)
+        getgenv().KillAura = state
+        if state then spawnAura() else despawnAura() end
+    end
+})
+
+local Section = Tab3:Section({ 
+    Title = "Armor,Helmet",
+    TextXAlignment = "Left",
+    TextSize = 30, -- Default Size
+})
+
+local Button = Tab3:Button({
+    Title = "Equip Helmet(idk)",
+    Desc = "Best Helmet Combo",
+    Callback = function()
+while wait() do
+    local remote = game:GetService("ReplicatedStorage").OtherThing.Tools
+
+    if remote and remote.FireServer then
+        remote:FireServer("Giant Cursed Spirit Orb", "Armor")
+        remote:FireServer("Magma Doge Head", "Armor")
+        remote:FireServer("Golden Bozoi Head", "Armor")
+        remote:FireServer("Big Floppa Head", "Armor")
+        remote:FireServer("Void Head", "Armor")
+        remote:FireServer("Skull Bike", "Armor")
+        remote:FireServer("Walter Hat", "Armor")
+        remote:FireServer("The World Head", "Armor")
+        remote:FireServer("Walter Dog Head", "Armor")
+        remote:FireServer("Giant Shivering Head", "Armor")
+        remote:FireServer("Dark Maxwell Head", "Armor")
+        remote:FireServer("Fraudkuna Head", "Armor")
+        remote:FireServer("Nerd Head", "Armor")
+        remote:FireServer("Blindfold", "Armor")
+        remote:FireServer("Legendary Cat Lord Armor", "Armor")
+        remote:FireServer("Legendary Cat Lord Armor", "Helmet")
+        remote:FireServer("Legendary Cat Lord Armor", "Helmet")
+        remote:FireServer("Legendary Cat Lord Armor", "Helmet")
+    else
+        warn("Không tìm thấy RemoteEvent hoặc FireServer không tồn tại!")
+    end
+end
+
+    end,
+})
+
+local Button = Tab3:Button({
+    Title = "All Helmet",
+    Desc = "Inf",
+    Callback = function()
+spawn(function()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayer
+    local invData = player:WaitForChild("InvData")
+
+    -- Các từ khóa cần kiểm tra trong tên
+    local allowedKeywords = { "Helmet", "Head", "Orb" }
+
+    while true do
+        for _, item in pairs(invData:GetChildren()) do
+            if item:IsA("IntValue") then
+                for _, keyword in ipairs(allowedKeywords) do
+                    if string.find(item.Name, keyword) then
+                        -- Gửi tên item và loại Armor
+                        ReplicatedStorage.OtherThing.Tools:FireServer(item.Name, "Armor")
+                        break -- Thoát khỏi vòng lặp từ khóa nếu đã khớp
+                    end
+                end
+            end
+        end
+        task.wait() -- Giữ cooldown 0 giây giữa các lần lặp
+    end
+end)
+    end,
+})
+
+local Button = Tab3:Button({
+    Title = "All Armor",
+    Desc = "Inf",
+    Callback = function()
+spawn(function()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayer
+    local invData = player:WaitForChild("InvData")
+
+    -- Các từ khóa cần kiểm tra trong tên
+    local allowedKeywords = { "Shirt", "Armor" }
+
+    while true do
+        for _, item in pairs(invData:GetChildren()) do
+            if item:IsA("IntValue") then
+                for _, keyword in ipairs(allowedKeywords) do
+                    if string.find(item.Name, keyword) then
+                        -- Gửi tên item và loại Armor
+                        ReplicatedStorage.OtherThing.Tools:FireServer(item.Name, "Helmet")
+                        break -- Thoát khỏi vòng lặp từ khóa nếu đã khớp
+                    end
+                end
+            end
+        end
+        task.wait() -- Giữ cooldown 0 giây giữa các lần lặp
+    end
+end)
+    end,
+})
+
+local Section = Tab3:Section({ 
+    Title = "Farming",
+    TextXAlignment = "Left",
+    TextSize = 30, -- Default Size
+})
+
+local Button = Tab3:Button({
+    Title = "Auto Rock Chest",
+    Desc = "Collect All Rock Chest",
+    Callback = function()
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+-- Danh sách tọa độ để dịch chuyển
+local positions = {
+    Vector3.new(2661, 16, 73),
+    Vector3.new(2507, 16, -352),
+    Vector3.new(2381, 16, -617),
+    Vector3.new(2454, 23, -685),
+    Vector3.new(2191, 16, -966),
+    Vector3.new(2494, 16, -1055),
+    Vector3.new(2801, 23, -243),
+    Vector3.new(2909, 16, -899),
+    Vector3.new(2983, 16, -1149),
+    Vector3.new(3148, 16, -744),
+    Vector3.new(3114, 22, -533),
+    Vector3.new(3235, 16, -657),
+    Vector3.new(3428, 16, -928),
+    Vector3.new(4101, 16, -1202),
+    Vector3.new(4029, 16, -873),
+    Vector3.new(3970, 16, -776),
+    Vector3.new(3788, 16, -861),
+    Vector3.new(3903, 16, -379),
+    Vector3.new(3670, 16, -446),
+    Vector3.new(3553, 16, -439),
+    Vector3.new(3908, 16, -380),
+    Vector3.new(3397, 23, -88),
+    Vector3.new(3711, 16, -92),
+    Vector3.new(3971, 16, 85),
+    Vector3.new(3650, 16, 147),
+    Vector3.new(3710, 16, -93),
+    Vector3.new(3774, 25, 533),
+    Vector3.new(2917, 28, 498),
+    Vector3.new(2497, 22, -125),
+    Vector3.new(2491, 16, 107),
+    Vector3.new(2231, 16, 68),
+    Vector3.new(2522, 16, 197),
+    Vector3.new(2282, 16, 509),
+    Vector3.new(2228, 16, 486),
+    Vector3.new(2746, 17, 35),
+    Vector3.new(2708, 17, 73),
+    Vector3.new(2747, 17, 102),
+    Vector3.new(2775, 17, 72),
+    Vector3.new(3322, 16, -420),
+    Vector3.new(3355, 16, -441),
+    Vector3.new(3331, 16, -480),
+    Vector3.new(3288, 16, -453),
+    Vector3.new(3070, 18, -259),
+    Vector3.new(2230, 16, 70),
+    Vector3.new(3053, 18, -102)
+}
+
+local delayTime = 0.1 -- Thời gian chờ giữa mỗi lần dịch chuyển (giây)
+
+-- Hàm tự động kích hoạt ProximityPrompt
+local function triggerPrompt()
+    for _, prompt in ipairs(workspace:GetDescendants()) do
+        if prompt:IsA("ProximityPrompt") and prompt.Enabled then
+            local distance = (prompt.Parent.Position - humanoidRootPart.Position).Magnitude
+            if distance <= prompt.MaxActivationDistance then
+                fireproximityprompt(prompt)
+            end
+        end
+    end
+end
+
+-- Dịch chuyển người chơi và kiểm tra ProximityPrompt
+for _, position in ipairs(positions) do
+    humanoidRootPart.CFrame = CFrame.new(position)
+    wait(0.1) -- Đợi để nhân vật ổn định
+    triggerPrompt() -- Kiểm tra và kích hoạt ProximityPrompt nếu có
+    wait(delayTime)
+end
+    end,
+})
+
+local Button = Tab3:Button({
+    Title = "Auto Pray V4❗️",
+    Desc = "Inf",
+    Callback = function()
+local Library = loadstring(Game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wizard"))()
+
+local Window = Library:NewWindow("Flandre Hub")
+
+local Tab = Window:NewSection("Main")
+
+Tab:CreateButton("Script Make By 54hz", function()
+
+print("hello")
+
+end)
+
+Tab:CreateToggle("Toggle", function(value)
+
+getgenv().AutoPray = value
+
+-- Lấy các dịch vụ và phần tử UI
+local v = game:GetService("VirtualInputManager")
+local player = game:GetService("Players").LocalPlayer
+local gui = player:WaitForChild("PlayerGui")
+local notPrayGui = gui:WaitForChild("Pop"):WaitForChild("NotPray")
+local prayBtn = notPrayGui:WaitForChild("Pray")
+
+-- Giá trị cố định
+local desiredSize = UDim2.new(1, 0, 1, 0)
+local desiredPosition = UDim2.new(0, 0, 0, 0)
+
+local desiredSize2 = UDim2.new(0.3, 0, 0.5, 0)
+local desiredPosition2 = UDim2.new(0.35, 0, 0.3, 0)
+
+-- Gỡ các layout phá vị trí
+for _, child in ipairs(notPrayGui:GetChildren()) do
+    if child:IsA("UIListLayout") or child:IsA("UIGridLayout") or child:IsA("UIScale") then
+        child:Destroy()
+    end
+end
+
+-- Thiết lập giá trị ban đầu
+notPrayGui.Size = desiredSize2
+notPrayGui.Position = desiredPosition2
+
+-- Đóng băng vị trí và kích thước của NotPray
+notPrayGui:GetPropertyChangedSignal("Size"):Connect(function()
+    if notPrayGui.Size ~= desiredSize2 then
+        notPrayGui.Size = desiredSize2
+    end
+end)
+
+notPrayGui:GetPropertyChangedSignal("Position"):Connect(function()
+    if notPrayGui.Position ~= desiredPosition2 then
+        notPrayGui.Position = desiredPosition2
+    end
+end)
+
+-- Gỡ layout phá Pray button
+for _, child in ipairs(prayBtn:GetChildren()) do
+    if child:IsA("UIListLayout") or child:IsA("UIGridLayout") or child:IsA("UIScale") then
+        child:Destroy()
+    end
+end
+
+-- Thiết lập giá trị ban đầu
+prayBtn.Size = desiredSize
+prayBtn.Position = desiredPosition
+
+-- Đóng băng vị trí và kích thước của Pray
+prayBtn:GetPropertyChangedSignal("Size"):Connect(function()
+    if prayBtn.Size ~= desiredSize then
+        prayBtn.Size = desiredSize
+    end
+end)
+
+prayBtn:GetPropertyChangedSignal("Position"):Connect(function()
+    if prayBtn.Position ~= desiredPosition then
+        prayBtn.Position = desiredPosition
+    end
+end)
+
+-- Lớp bảo vệ liên tục giữ đúng vị trí và hiển thị
+task.spawn(function()
+    while true do
+        if getgenv().AutoPray then
+            -- Giữ đúng kích thước và vị trí
+            notPrayGui.Visible = true
+            notPrayGui.Size = desiredSize2
+            notPrayGui.Position = desiredPosition2
+
+            prayBtn.Visible = true
+            prayBtn.Size = desiredSize
+            prayBtn.Position = desiredPosition
+        else
+            notPrayGui.Visible = false
+            prayBtn.Visible = false
+        end
+        task.wait(0.1)
+    end
+end)
+
+-- Kiểm tra tính hợp lệ của nút Pray
+local function isValid()
+    return notPrayGui.Visible and prayBtn.Visible
+        and prayBtn.Size == desiredSize
+        and prayBtn.Position == desiredPosition
+end
+
+-- Click vào giữa nút Pray
+local function clickPray()
+    local pos = prayBtn.AbsolutePosition + (prayBtn.AbsoluteSize / 2)
+    v:SendMouseButtonEvent(pos.X, pos.Y, 0, true, game, 0)
+    v:SendMouseButtonEvent(pos.X, pos.Y, 0, false, game, 0)
+end
+
+-- Luồng tự động Pray
+task.spawn(function()
+    while task.wait(0) do
+        if getgenv().AutoPray and isValid() then
+            clickPray()
+        end
+    end
+end)
+
+
+print(value)
+
+end)
+    end,
+})
+
+local Section = Tab3:Section({ 
+    Title = "Skill",
+    TextXAlignment = "Left",
+    TextSize = 30, -- Default Size
+})
+
+local Button = Tab3:Button({
+    Title = "Dupe Fruit Skill",
+    Desc = "More Than 2 Player To Use",
+    Callback = function()
+        -- Lấy tất cả các RemoteEvent trong game
+        local function triggerAllRemoteEvents()
+            -- Duyệt qua tất cả các đối tượng trong game
+            for _, object in pairs(game:GetDescendants()) do
+                -- Kiểm tra xem đối tượng có phải là RemoteEvent hay không
+                if object:IsA("RemoteEvent") then
+                    -- Kích hoạt RemoteEvent
+                    print("Kích hoạt RemoteEvent: " .. object.Name)
+                    -- Gửi tín hiệu đến RemoteEvent (có thể thêm arguments nếu cần)
+                    object:FireServer()
+                end
+            end
+        end
+
+        -- Gọi hàm khi bấm nút
+        triggerAllRemoteEvents()
+    end
+})
+
+local Section = Tab4:Section({ 
+    Title = "Fishing",
+    TextXAlignment = "Left",
+    TextSize = 30, -- Default Size
+})
+
+local Toggle = Tab4:Toggle({
+    Title = "Fishing Desert",
+    Desc = "Auto Fishing ",
+    Value = false,
+    Callback = function(Value)
+getgenv().running = Value
+
+spawn(function()
+    while getgenv().running do
+        local player = game:GetService("Players").LocalPlayer
+        local fishingFolder = workspace:FindFirstChild(player.Name)
+        if fishingFolder and fishingFolder:FindFirstChild("Fishing") then
+            local desert = fishingFolder.Fishing:FindFirstChild("Desert")
+            if desert and desert:FindFirstChild("RemoteEvent") then
+                desert.RemoteEvent:FireServer("Fishing3")
+            end
+        end
+        task.wait()
+    end
+end)
+
+    end,
+})
+
+local Toggle = Tab4:Toggle({
+    Title = "Fishing Magma",
+    Desc = "Auto Fishing ",
+    Value = false,
+    Callback = function(Value)
+getgenv().lavaFishingRunning = Value
+
+spawn(function()
+    while getgenv().lavaFishingRunning do
+        local player = game:GetService("Players").LocalPlayer
+        local fishingFolder = workspace:FindFirstChild(player.Name)
+        if fishingFolder and fishingFolder:FindFirstChild("Fishing") then
+            local lava = fishingFolder.Fishing:FindFirstChild("Lava")
+            if lava and lava:FindFirstChild("RemoteEvent") then
+                lava.RemoteEvent:FireServer("Fishing3")
+            end
+        end
+        task.wait()
+    end
+end)
+
+    end,
+})
+
+local Toggle = Tab4:Toggle({
+    Title = "Fishing Snow",
+    Desc = "Auto Fishing ",
+    Value = false,
+    Callback = function(Value)
+getgenv().snowFishingRunning = Value
+
+spawn(function()
+    while getgenv().snowFishingRunning do
+        local player = game:GetService("Players").LocalPlayer
+        local fishingFolder = workspace:FindFirstChild(player.Name)
+        if fishingFolder and fishingFolder:FindFirstChild("Fishing") then
+            local snow = fishingFolder.Fishing:FindFirstChild("Snow")
+            if snow and snow:FindFirstChild("RemoteEvent") then
+                snow.RemoteEvent:FireServer("Fishing3")
+            end
+        end
+        task.wait()
+    end
+end)
+
+    end,
+})
+
+local Section = Tab5:Section({ 
+    Title = "No Cooldown",
+    TextXAlignment = "Left",
+    TextSize = 30, -- Default Size
+})
+
+local Code = Tab5:Code({
+    Title = "No Cd tut",
+    Locked = false,
+    Code = [[turn on no cd and change item
+https://m.youtube.com/watch?v=qm_V5VbldPM&pp=0gcJCa0JAYcqIYzv]],
+})
+
+local Toggle = Tab5:Toggle({
+    Title = "Skill 1",
+    Desc = "No Cd,Auto Skill 1",
+    Value = false,
+    Callback = function(Value)
+getgenv().AutoUseTool1 = Value -- Biến để bật/tắt script
+
+spawn(function()
+    while AutoUseTool1 do
+        local player = game.Players.LocalPlayer
+        local char = player.Character
+
+        if char and char:FindFirstChildOfClass("Tool") then
+            local tool = char:FindFirstChildOfClass("Tool")
+            if tool:FindFirstChild("1") and tool["1"]:FindFirstChild("RemoteEvent") then
+                tool["1"].RemoteEvent:FireServer()
+            end
+        end
+
+        wait(0.1) -- Giảm thời gian chờ nếu muốn tốc độ kích hoạt nhanh hơn
+    end
+end)
+
+    end,
+})
+
+local Toggle = Tab5:Toggle({
+    Title = "Skill 2",
+    Desc = "No Cd,Auto Skill 2",
+    Value = false,
+    Callback = function(Value)
+getgenv().AutoUseTool2 = Value -- Biến để bật/tắt script
+
+spawn(function()
+    while AutoUseTool2 do
+        local player = game.Players.LocalPlayer
+        local char = player.Character
+
+        if char and char:FindFirstChildOfClass("Tool") then
+            local tool = char:FindFirstChildOfClass("Tool")
+            if tool:FindFirstChild("2") and tool["2"]:FindFirstChild("RemoteEvent") then
+                tool["2"].RemoteEvent:FireServer()
+            end
+        end
+
+        wait(0.1) -- Giảm thời gian chờ nếu muốn tốc độ kích hoạt nhanh hơn
+    end
+end)
+
+    end,
+})
+
+local Toggle = Tab5:Toggle({
+    Title = "Skill 3",
+    Desc = "No Cd,Auto Skill 3",
+    Value = false,
+    Callback = function(Value)
+getgenv().AutoUseTool3 = Value -- Biến để bật/tắt script
+
+spawn(function()
+    while AutoUseTool3 do
+        local player = game.Players.LocalPlayer
+        local char = player.Character
+
+        if char and char:FindFirstChildOfClass("Tool") then
+            local tool = char:FindFirstChildOfClass("Tool")
+            if tool:FindFirstChild("3") and tool["3"]:FindFirstChild("RemoteEvent") then
+                tool["3"].RemoteEvent:FireServer()
+            end
+        end
+
+        wait(0.1) -- Giảm thời gian chờ nếu muốn tốc độ kích hoạt nhanh hơn
+    end
+end)
+
+    end,
+})
+
+local Section = Tab6:Section({ 
+    Title = "Misc",
+    TextXAlignment = "Left",
+    TextSize = 30, -- Default Size
+})
+
+local Button = Tab6:Button({
+    Title = "instantpp",
+    Desc = "set hold button to instant",
+    Callback = function()
+-- LocalScript trong StarterPlayerScripts
+
+-- Lấy tất cả các object cần chỉnh
+for _, obj in pairs(workspace:GetDescendants()) do
+    -- Kiểm tra nếu object có thuộc tính "HoldTime" (ví dụ)
+    if obj:IsA("ProximityPrompt") then
+        obj.HoldDuration = 0
+    end
+end
+    end
+})
+
+local Button = Tab6:Button({
+    Title = "grabtools",
+    Desc = "teleport grabtools",
+    Callback = function()
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart") -- Phần trung tâm của nhân vật
+
+-- Kiểm tra xem một đối tượng có thể nhặt không (có Handle không)
+local function isPickupable(item)
+    return item:FindFirstChild("Handle") and item:IsA("Tool")
+end
+
+-- Lặp qua tất cả các đối tượng trong Workspace
+for _, item in pairs(workspace:GetChildren()) do
+    if isPickupable(item) then
+        -- Dịch chuyển nhân vật đến vị trí của item
+        humanoidRootPart.CFrame = item.Handle.CFrame
+        break -- Chỉ dịch chuyển đến một vật phẩm đầu tiên tìm thấy
+    end
+end
+
+        print("Clicked!")
+    end,
+})
+
+local Toggle = Tab6:Toggle({
+    Title = "grabtools",
+    Desc = "auto grabtools",
+    Value = false,
+    Callback = function(Value)
+getgenv().autograb = Value
+ spawn(function() 
+ while autograb==true do wait() 
+ if not getgenv().autograb then break end 
+ local humanoid = game.Players.LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid") 
+ for _, child in ipairs(workspace:GetChildren()) do 
+ if game.Players.LocalPlayer.Character and child:IsA("BackpackItem") and child:FindFirstChild("Handle") then 
+ humanoid:EquipTool(child) 
+ end 
+ end 
+ end 
+ end)  
+    end,
+})
+
+local Toggle = Tab6:Toggle({
+    Title = "inf jump",
+    Desc = "just inf jump",
+    Value = false,
+    Callback = function(Value)
+-- Script Infinite Jump Toggle bằng getgenv
+getgenv().infJump = Value 
+
+-- Hàm chính xử lý Infinite Jump
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if getgenv().infJump == true or getgenv().infJump == "inf" then
+        local player = game:GetService("Players").LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
+    end,
+})
+
+local Toggle = Tab6:Toggle({
+    Title = "noclip",
+    Desc = "through wall",
+    Value = false,
+    Callback = function(Value)
+getgenv().Clip = Value 
+ wait(0.1) 
+ local function NoclipLoop() 
+ if Clip == true and game.Players.LocalPlayer.Character ~= nil then 
+ for _, c in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do 
+                                 if c:IsA("BasePart") and c.CanCollide == true and c.Name ~= floatName then 
+ c.CanCollide = false 
+ end 
+ end 
+ end 
+ end 
+ Noclipping = game:GetService("RunService").Stepped:Connect(NoclipLoop) 
+
+ if not getgenv().Clip then Noclipping:Disconnect() end
+
+    end,
+})
+
+local Toggle = Tab6:Toggle({
+    Title = "esp",
+    Desc = "MONKEEEEE",
+    Value = false,
+    Callback = function(Value)
+        getgenv().FlaggingESP = Value
+
+        local function ApplyESP(v)
+            if v.Character and v.Character:FindFirstChildOfClass('Humanoid') then
+                pcall(function()
+                    v.Character.Humanoid.NameDisplayDistance = getgenv().FlaggingESP and 9e9 or 50
+                    v.Character.Humanoid.NameOcclusion = getgenv().FlaggingESP and "NoOcclusion" or "OccludeAll"
+                    v.Character.Humanoid.HealthDisplayDistance = getgenv().FlaggingESP and 9e9 or 50
+                    v.Character.Humanoid.HealthDisplayType = getgenv().FlaggingESP
+                        and Enum.HumanoidHealthDisplayType.AlwaysOn
+                        or Enum.HumanoidHealthDisplayType.AlwaysOff
+                end)
+            end
+        end
+
+        for _, v in pairs(game.Players:GetPlayers()) do
+            ApplyESP(v)
+        end
+
+        game.Players.PlayerAdded:Connect(function(v)
+            ApplyESP(v)
+            v.CharacterAdded:Connect(function()
+                task.wait(0.33)
+                ApplyESP(v)
+            end)
+        end)
+    end,
+})
+
+local Section = Tab7:Section({ 
+    Title = "Visual",
+    TextXAlignment = "Left",
+    TextSize = 30, -- Default Size
+})
+
+local Input = Tab7:Input({
+    Title = "Fake Beli",
+    Desc = "",
+    Value = "",
+    PlaceholderText = "Enter your fake beli",
+    ClearTextOnFocus = false,
+    Callback = function(Text)
+local player = game.Players.LocalPlayer
+player.Stats.Beli.Value = Text
+    end,
+})
+
+local Input = Tab7:Input({
+    Title = "Fake Exp",
+    Desc = "",
+    Value = "",
+    PlaceholderText = "Enter your fake exp",
+    ClearTextOnFocus = false,
+    Callback = function(Text)
+local player = game.Players.LocalPlayer
+player.Stats.Exp.Value = Text
+    end,
+})
+
+local Input = Tab7:Input({
+    Title = "Fake Level",
+    Desc = "",
+    Value = "",
+    PlaceholderText = "Enter your fake level",
+    ClearTextOnFocus = false,
+    Callback = function(Text)
+local player = game.Players.LocalPlayer
+player.Stats.Level.Value = Text
+    end,
+})
+
+local Section = Tab8:Section({ 
+    Title = "Island",
+    TextXAlignment = "Left",
+    TextSize = 30, -- Default Size
+})
+
+local teleportLocations = {
+    ["Chad Island"] = Vector3.new(-709, 10, 509),
+    ["Big Brain Island"] = Vector3.new(556, 10, 506),
+    ["Desert Island"] = Vector3.new(-340.91278076171875, 18.29494857788086, -997.4833374023438),
+    ["Magma Island"] = Vector3.new(2801.695556640625, 11.266153335571289, -180.07965087890625),
+    ["Snow Island"] = Vector3.new(-2597.051513671875, 32.039512634277344, -986.5516357421875)
+}
+
+local Dropdown = Tab8:Dropdown({
+    Title = "Teleport to Island",
+    Desc = "Select an island to teleport",
+    Value = "Chad Island",
+    Multi = false,
+    AllowNone = true,
+    Values = { 
+        "Chad Island",
+        "Big Brain Island",
+        "Desert Island",
+        "Magma Island",
+        "Snow Island"
+    },
+    Callback = function(selection)
+        local position = teleportLocations[selection]
+        if position then
+            local player = game.Players.LocalPlayer
+            local character = player.Character or player.CharacterAdded:Wait()
+            character:SetPrimaryPartCFrame(CFrame.new(position))
+        end
+    end
+})
+
+local Section = Tab9:Section({ 
+    Title = "Boss",
+    TextXAlignment = "Left",
+    TextSize = 30, -- Default Size
+})
+
+local bossLocations = {
+    ["Cabybara Fight Room"] = Vector3.new(5432.73046875, 1755.6904296875, 610.4720458984375),
+    ["Maxwell Fight Room"] = Vector3.new(-14569.0859375, 4700.61181640625, -3191.745361328125),
+    ["Dog Fight Room"] = Vector3.new(9000.396484375, 1750.1824951171875, -3042.721435546875),
+    ["Summon Lava Raid"] = Vector3.new(3485.044677734375, 23.636802673339844, -1055.036865234375),
+    ["Praying"] = Vector3.new(-3513.5810546875, 400.43157958984375, -642.6527709960938),
+    ["Geto Fight Room"] = Vector3.new(5217.044921875, 2260.821533203125, -4130.38330078125),
+    ["Diavolo Summon"] = Vector3.new(2238.60400390625, 20.818754196166992, 649.405029296875),
+    ["Mahito/Dagon Summon"] = Vector3.new(-2516.0263671875, 11.406415939331055, 123.847412109375),
+    ["Misaka Fight Room"] = Vector3.new(-3605, 1250, 10453),
+    ["Dagon Fight Room"] = Vector3.new(1634, 22071, 59964),
+    ["Dagon Domain"] = Vector3.new(27052.248046875, 24330.271484375, 44108.421875),
+    ["Mahito Fight Room"] = Vector3.new(-37975, 21990, 67347),
+    ["Mahito Domain"] = Vector3.new(-27548.91015625, 16200.41015625, 5832.3046875)
+}
+
+local Dropdown = Tab9:Dropdown({
+    Title = "Boss Fight / Summon Areas",
+    Desc = "Teleport to Boss areas or summon spots",
+    Value = "Cabybara Fight Room",
+    Multi = false,
+    AllowNone = true,
+    Values = {
+        "Cabybara Fight Room",
+        "Maxwell Fight Room",
+        "Dog Fight Room",
+        "Summon Lava Raid",
+        "Praying",
+        "Geto Fight Room",
+        "Diavolo Summon",
+        "Mahito/Dagon Summon",
+        "Misaka Fight Room",
+        "Dagon Fight Room",
+        "Dagon Domain",
+        "Mahito Fight Room",
+        "Mahito Domain"
+    },
+    Callback = function(selection)
+        local position = bossLocations[selection]
+        if position then
+            local player = game.Players.LocalPlayer
+            local character = player.Character or player.CharacterAdded:Wait()
+            character:SetPrimaryPartCFrame(CFrame.new(position))
+        end
+    end
+})
+
+local Section = Tab10:Section({ 
+    Title = "Fishing",
+    TextXAlignment = "Left",
+    TextSize = 30, -- Default Size
+})
+
+local fishingSpots = {
+    ["Desert Fishing"] = Vector3.new(890.1141967773438, 9.118748664855957, -828.7176513671875),
+    ["Magma Fishing"] = Vector3.new(3871.954833984375, 16.650545120239258, 572.737548828125),
+    ["Snow Fishing"] = Vector3.new(-3072.841064453125, 10.895713806152344, 300.09979248046875)
+}
+
+local Dropdown = Tab10:Dropdown({
+    Title = "Fishing Spots",
+    Desc = "Teleport to a fishing area",
+    Value = "Desert Fishing",
+    Multi = false,
+    AllowNone = true,
+    Values = {
+        "Desert Fishing",
+        "Magma Fishing",
+        "Snow Fishing"
+    },
+    Callback = function(selection)
+        local position = fishingSpots[selection]
+        if position then
+            local player = game.Players.LocalPlayer
+            local character = player.Character or player.CharacterAdded:Wait()
+            character:WaitForChild("Humanoid") -- Optional
+            character:SetPrimaryPartCFrame(CFrame.new(position))
+        end
+    end
+})
+
+local player = game.Players.LocalPlayer
+local gui = Instance.new("ScreenGui")
+gui.Name = "CircleButtonGui"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Nút ảnh tròn
+local button = Instance.new("ImageButton")
+button.Name = "CircleButton"
+button.Size = UDim2.new(0, 60, 0, 60)
+button.Position = UDim2.new(0, 100, 0, 100)
+button.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Màu nền đen
+button.Image = "rbxassetid://116721573962136" -- Thay ID nếu muốn
+button.BackgroundTransparency = 0
+button.AutoButtonColor = false
+button.Active = true
+button.ZIndex = 99999 -- ZIndex cao để luôn hiển thị trên cùng
+button.Parent = gui
+
+-- Bo tròn nút
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0.5, 0)
+corner.Parent = button
+
+-- Viền xanh dương bên ngoài
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(0, 120, 255) -- Xanh dương
+stroke.Thickness = 2
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+stroke.Parent = button
+
+-- Kéo nút
+local dragging = false
+local dragInput, mouseStartPos, elementStartPos
+local userInputService = game:GetService("UserInputService")
+
+button.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		mouseStartPos = input.Position
+		elementStartPos = button.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+button.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+userInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - mouseStartPos
+		button.Position = UDim2.new(
+			elementStartPos.X.Scale, elementStartPos.X.Offset + delta.X,
+			elementStartPos.Y.Scale, elementStartPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+-- Click để mở/đóng cửa sổ
+local isWindowOpen = false
+
+-- Giả định có biến Window chứa module hoặc đối tượng có hàm Open/Close
+-- Bạn cần gán Window thủ công ở nơi khác, ví dụ:
+-- local Window = require(game.ReplicatedStorage.MyWindowModule)
+
+button.MouseButton1Click:Connect(function()
+	isWindowOpen = not isWindowOpen
+	if isWindowOpen then
+		if Window and Window.Open then
+			Window:Open()
+		end
+	else
+		if Window and Window.Close then
+			Window:Close()
+		end
+	end
+end)
