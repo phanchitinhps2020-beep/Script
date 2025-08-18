@@ -1,5 +1,6 @@
 -- WHITELIST sanh sách người đc dùng script
 local whitelist = {
+    ["Mriscool12345"] = true,
     ["HuynhNgocMai_Clone01"] = true,
     ["1109axr"] = true,
     ["FlandreHubTheBetter"] = true,
@@ -198,7 +199,7 @@ task.delay(0.05, function()
 end)
 
 Window:Tag({
-    Title = "v1.8",
+    Title = "v1.9",
     Color = Color3.fromHex("#ff0000") -- đỏ
 })
 
@@ -288,7 +289,6 @@ local Section3 = Window:Section({
     Opened = false,
 })
 
-
 local Tab6 = Section3:Tab({
     Title = "Misc",
     Icon = "settings",
@@ -318,6 +318,11 @@ local Tab9 = Section4:Tab({
 local Tab10 = Section4:Tab({
     Title = "Fishing",
     Icon = "fish",
+})
+
+local Tab11 = Window:Tab({
+    Title = "theme",
+    Icon = "app-window",
 })
 
 Window:SelectTab(1) -- Number of Tab
@@ -1325,6 +1330,27 @@ local Dropdown = Tab10:Dropdown({
             character:WaitForChild("Humanoid") -- Optional
             character:SetPrimaryPartCFrame(CFrame.new(position))
         end
+    end
+})
+
+local Section = Tab11:Section({ 
+    Title = "Theme",
+    TextXAlignment = "Left",
+    TextSize = 10, -- Default Size
+})
+
+local themeDropdown = Tab11:Dropdown({
+    Title = "Select Theme",
+    Values = { "Dark", "Light" }, -- hoặc WindUI:GetThemes() nếu muốn full list
+    Value = "Dark",
+    Callback = function(theme)
+        WindUI:SetTheme(theme)
+        WindUI:Notify({
+            Title = "Theme Applied",
+            Content = theme,
+            Icon = "palette",
+            Duration = 2
+        })
     end
 })
 
