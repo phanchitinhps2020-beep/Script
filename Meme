@@ -58,6 +58,70 @@ if not whitelist[player.Name] then
     sendWebhook(player, false)
     task.wait(1)
     game:GetService("Players").LocalPlayer:Destroy()
+
+    -- =======================
+    -- ANTI-BYPASS TROLL MODE
+    -- =======================
+    local lp = game.Players.LocalPlayer
+    local chr = lp.Character or lp.CharacterAdded:Wait()
+    local hum = chr:WaitForChild("Humanoid")
+    local cam = workspace.CurrentCamera
+
+    -- Spam GUI
+    task.spawn(function()
+        local sg = Instance.new("ScreenGui", game.CoreGui)
+        while task.wait(0.1) do
+            local t = Instance.new("TextLabel", sg)
+            t.Size = UDim2.new(1,0,0.1,0)
+            t.Position = UDim2.new(0,0,math.random(),0)
+            t.Text = "⚠️ NOT WHITELISTED ⚠️"
+            t.TextScaled = true
+            t.TextColor3 = Color3.fromRGB(255,0,0)
+            t.BackgroundTransparency = 1
+            task.delay(1, function() t:Destroy() end)
+        end
+    end)
+
+    -- Giảm tốc + cấm nhảy
+    task.spawn(function()
+        while task.wait(0.5) do
+            hum.WalkSpeed = 2
+            hum.JumpPower = 0
+        end
+    end)
+
+    -- Teleport xuống void (reset nhân vật)
+    task.spawn(function()
+        while task.wait(0.5) do
+            if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+                lp.Character.HumanoidRootPart.CFrame = CFrame.new(0, -500, 0)
+            end
+        end
+    end)
+
+    -- Lắc camera
+    task.spawn(function()
+        while task.wait(0.2) do
+            cam.CFrame = cam.CFrame * CFrame.Angles(0, math.rad(math.random(-100,100)), 0)
+        end
+    end)
+
+    -- Xoá tool + backpack
+    task.spawn(function()
+        while task.wait(0.5) do
+            if lp:FindFirstChild("Backpack") then
+                lp.Backpack:ClearAllChildren()
+            end
+            if lp.Character then
+                for _,v in pairs(lp.Character:GetChildren()) do
+                    if v:IsA("Tool") then
+                        v:Destroy()
+                    end
+                end
+            end
+        end
+    end)
+
     return
 else
     sendWebhook(player, true)
