@@ -205,6 +205,7 @@ tweenOutAndDestroy()
 --Your Loadstring Here
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 WindUI:SetNotificationLower(true)
+WindUI:SetFont("rbxasset://fonts/families/FredokaOne.json")
 
 -- ====== Link video webm có tiếng ======
 local videoUrl = "https://github.com/huynhthingocmai/Sikibidi/raw/refs/heads/main/XRecorder_Edited_20250812_01.webm"
