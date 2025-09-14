@@ -49,6 +49,27 @@ local Section = Window:Section({Title = "Home Tab", Icon = "house", Opened = fal
 local Tab1 = Section:Tab({Title = "Welcome", Icon = "house"})
 local Tab2 = Section:Tab({Title = "Main", Icon = "house"})
 
+local Paragraph = Tab1:Paragraph({
+    Title = "Welcome To Flandre Hub",
+    Desc = "Scripr Make By 54hz,discord:@nhmroblox,tiktok:@flandrescript",
+    Color = "black",
+    Image = "rbxassetid://116721573962136",
+    ImageSize = 30,
+    Thumbnail = "",
+    ThumbnailSize = 80,
+    Locked = false,
+})
+
+local Code = Tab1:Code({
+    Title = "Official Youtube Link",
+    Code = [[https://m.youtube.com/@flandrescript]]
+})
+
+local Code = Tab1:Code({
+    Title = "Official Discord Server",
+    Code = [[https://discord.gg/fBWSRqbMwn]]
+})
+
 -- ======================= ESP =======================
 local ElementsSection = Tab2:Section({Title = "ESP", Icon = "eye"})
 Tab2:Divider()
