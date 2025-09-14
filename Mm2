@@ -50,14 +50,27 @@ local Tab1 = Section:Tab({Title = "Welcome", Icon = "house"})
 local Tab2 = Section:Tab({Title = "Main", Icon = "house"})
 
 local Paragraph = Tab1:Paragraph({
-    Title = "Welcome To Flandre Hub",
-    Desc = "Scripr Make By 54hz,discord:@nhmroblox,tiktok:@flandrescript",
-    Color = "black",
+    Title = "Welcome To Flandre Hub!",
+    Desc = "Script Make By 54hz",
+    Color = "White",
     Image = "rbxassetid://116721573962136",
     ImageSize = 30,
-    Thumbnail = "",
-    ThumbnailSize = 80,
     Locked = false,
+})
+
+local Code = Tab1:Code({
+    Title = "Official Roblox User",
+    Code = [[@ccnhanccthaiccnghi]]
+})
+
+local Code = Tab1:Code({
+    Title = "Official Tikok User",
+    Code = [[@flandrescript]]
+})
+
+local Code = Tab1:Code({
+    Title = "Official Discors User",
+    Code = [[nhmroblox]]
 })
 
 local Code = Tab1:Code({
