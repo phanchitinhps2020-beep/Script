@@ -1,0 +1,701 @@
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+WindUI:SetNotificationLower(true)
+WindUI:SetFont("rbxasset://fonts/families/FredokaOne.json")
+
+local Window = WindUI:CreateWindow({
+    Title = "Flandre Hub",
+    Icon = "rbxassetid://116721573962136",
+    Author = "Murder Mystery 2",
+    Folder = "Flandre Hub",
+    Size = UDim2.fromOffset(1, 1),
+    Transparent = false,
+    Theme = "Dark",
+    SideBarWidth = 150,
+    Background = "",
+    BackgroundImageTransparency = 0.42,
+    HideSearchBar = true,
+    ScrollBarEnabled = true,
+})
+
+Window:Tag({Title = "v1.0 BETA", Color = Color3.fromHex("#ff0000")})
+
+local TimeTag = Window:Tag({Title = "00:00", Color = Color3.fromHex("#000000")})
+
+-- cập nhật thời gian
+local hue = 0
+task.spawn(function()
+    while true do
+        local now = os.date("*t")
+        local hours = string.format("%02d", now.hour)
+        local minutes = string.format("%02d", now.min)
+        
+        hue = (hue + 0.01) % 1
+        local color = Color3.fromHSV(hue, 1, 1)
+        
+        TimeTag:SetTitle(hours .. ":" .. minutes)
+        TimeTag:SetColor(color)
+        task.wait(0.06)
+    end
+end)
+
+Window:CreateTopbarButton("theme-switcher", "moon", function()
+    WindUI:SetTheme(WindUI:GetCurrentTheme() == "Dark" and "Light" or "Dark")
+    WindUI:Notify({Title = "Theme Changed", Content = "Current theme: "..WindUI:GetCurrentTheme(), Duration = 2})
+end, 990)
+
+Window:DisableTopbarButtons({"Close","Minimize","Fullscreen"})
+
+local Section = Window:Section({Title = "Home Tab", Icon = "house", Opened = false})
+local Tab1 = Section:Tab({Title = "Welcome", Icon = "house"})
+local Tab2 = Section:Tab({Title = "Main", Icon = "house"})
+
+-- ======================= ESP =======================
+local ElementsSection = Tab2:Section({Title = "ESP", Icon = "eye"})
+Tab2:Divider()
+
+local Toggle = Tab2:Toggle({
+    Title = "ESP",
+    Desc = "",
+    Icon = "eye",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state)
+        local Players = game:GetService("Players")
+        _G.espEnabled = state
+        _G.espLoopRunning = _G.espLoopRunning or false
+
+        local function applyHighlight(obj, color)
+            if not obj:FindFirstChild("ESP_Highlight") then
+                local hl = Instance.new("Highlight")
+                hl.Name = "ESP_Highlight"
+                hl.FillTransparency = 0.5
+                hl.OutlineTransparency = 0
+                hl.Parent = obj
+            end
+            obj.ESP_Highlight.FillColor = color
+        end
+
+        local function removeAllHighlights()
+            for _, plr in pairs(Players:GetPlayers()) do
+                if plr.Character and plr.Character:FindFirstChild("ESP_Highlight") then
+                    plr.Character.ESP_Highlight:Destroy()
+                end
+            end
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if obj:IsA("Part") and obj.Name == "GunDrop" and obj:FindFirstChild("ESP_Highlight") then
+                    obj.ESP_Highlight:Destroy()
+                end
+            end
+        end
+
+        local function checkTools()
+            local anyTool = false
+            local allNoTool = true
+            for _, plr in pairs(Players:GetPlayers()) do
+                if plr.Character then
+                    local hasTool = plr.Character:FindFirstChild("Gun") or plr.Character:FindFirstChild("Knife")
+                        or plr.Backpack:FindFirstChild("Gun") or plr.Backpack:FindFirstChild("Knife")
+                    if hasTool then
+                        anyTool = true
+                        allNoTool = false
+                    end
+                end
+            end
+            return anyTool, allNoTool
+        end
+
+        if _G.espEnabled then
+            local anyTool, allNoTool = checkTools()
+            if anyTool then
+                WindUI:Notify({Title = "Trận đấu bắt đầu", Content = "ESP được bật / ESP enabled", Duration = 3, Icon = "check"})
+            elseif allNoTool then
+                WindUI:Notify({Title = "Trận đấu kết thúc / Round End", Content = "Đợi trận đấu tiếp theo / Waiting for next round", Duration = 3, Icon = "info"})
+            end
+
+            if not _G.espLoopRunning then
+                _G.espLoopRunning = true
+                task.spawn(function()
+                    while _G.espEnabled do
+                        for _, plr in pairs(Players:GetPlayers()) do
+                            if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                                local char = plr.Character
+                                local color = Color3.fromRGB(0, 255, 0)
+                                if char:FindFirstChild("Gun") or plr.Backpack:FindFirstChild("Gun") then
+                                    color = Color3.fromRGB(0,120,255)
+                                elseif char:FindFirstChild("Knife") or plr.Backpack:FindFirstChild("Knife") then
+                                    color = Color3.fromRGB(255,0,0)
+                                end
+                                applyHighlight(char, color)
+                            end
+                        end
+                        for _, obj in pairs(workspace:GetDescendants()) do
+                            if obj:IsA("Part") and obj.Name == "GunDrop" then
+                                applyHighlight(obj, Color3.fromRGB(0,120,255))
+                            end
+                        end
+                        task.wait(1)
+                        if not _G.espEnabled then break end
+                    end
+                    removeAllHighlights()
+                    _G.espLoopRunning = false
+                end)
+            end
+        else
+            _G.espEnabled = false
+            removeAllHighlights()
+        end
+    end
+})
+
+-- ======================= ROLE / GUN =======================
+local ElementsSection2 = Tab2:Section({Title = "Role", Icon = "info"})
+Tab2:Divider()
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Hàm bắn murderer
+local function shootMurderer()
+    local char = LocalPlayer.Character
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+
+    local holdGun = char and char:FindFirstChild("Gun")
+    local backpackGun = backpack and backpack:FindFirstChild("Gun")
+
+    if backpackGun and not holdGun then
+        WindUI:Notify({
+            Title = "Bạn chưa cầm súng / You not equip gun",
+            Content = "Cầm súng để bắn / Equip gun to shoot",
+            Duration = 3,
+            Icon = "info",
+        })
+        return
+    end
+
+    if not backpackGun and not holdGun then
+        WindUI:Notify({
+            Title = "Bạn không có súng / You do not have Gun",
+            Content = "Nhặt súng để bắn / Take the gun to shoot",
+            Duration = 3,
+            Icon = "info",
+        })
+        return
+    end
+
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character
+            and plr.Character:FindFirstChild("HumanoidRootPart")
+            and (plr.Character:FindFirstChild("Knife") or plr.Backpack:FindFirstChild("Knife")) then
+
+            local hrp = plr.Character.HumanoidRootPart
+            local gun = char:FindFirstChild("Gun")
+            if gun then
+                local remote = gun:FindFirstChild("KnifeLocal")
+                    and gun.KnifeLocal:FindFirstChild("CreateBeam")
+                    and gun.KnifeLocal.CreateBeam:FindFirstChild("RemoteFunction")
+
+                if remote then
+                    local args = {1, hrp.Position, "AH2"}
+                    remote:InvokeServer(unpack(args))
+                end
+            end
+            break
+        end
+    end
+end
+
+-- Shot Murderer Button
+Tab2:Button({
+    Title = "Shot Murderer",
+    Desc = "Bắn Murderer trực tiếp",
+    Locked = false,
+    Callback = function()
+        shootMurderer()
+    end
+})
+
+-- Shot Murderer Gui Button
+Tab2:Button({
+    Title = "Shot Murderer Gui",
+    Desc = "Mở GUI riêng để bắn Murderer",
+    Locked = false,
+    Callback = function()
+        if LocalPlayer.PlayerGui:FindFirstChild("ShotMurdererGui") then return end
+
+        local gui = Instance.new("ScreenGui")
+        gui.Name = "ShotMurdererGui"
+        gui.ResetOnSpawn = false
+        gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(0, 200, 0, 120)
+        frame.Position = UDim2.new(0.5, -100, 0.5, -60)
+        frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        frame.Active = true
+        frame.Draggable = true
+        frame.Parent = gui
+
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+
+        local title = Instance.new("TextLabel")
+        title.Size = UDim2.new(1, -30, 0, 30)
+        title.Position = UDim2.new(0, 10, 0, 0)
+        title.BackgroundTransparency = 1
+        title.Text = "Shot Murderer Gui"
+        title.TextColor3 = Color3.fromRGB(255, 255, 255)
+        title.Font = Enum.Font.FredokaOne
+        title.TextSize = 18
+        title.TextXAlignment = Enum.TextXAlignment.Left
+        title.Parent = frame
+
+        local closeBtn = Instance.new("TextButton")
+        closeBtn.Size = UDim2.new(0, 25, 0, 25)
+        closeBtn.Position = UDim2.new(1, -30, 0, 3)
+        closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        closeBtn.Text = "X"
+        closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        closeBtn.Font = Enum.Font.FredokaOne
+        closeBtn.TextSize = 16
+        closeBtn.Parent = frame
+        Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 5)
+
+        closeBtn.MouseButton1Click:Connect(function()
+            gui:Destroy()
+        end)
+
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(1, -20, 0, 40)
+        button.Position = UDim2.new(0, 10, 0, 40)
+        button.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+        button.Text = "Shot Murderer"
+        button.TextColor3 = Color3.fromRGB(255, 255, 255)
+        button.Font = Enum.Font.FredokaOne
+        button.TextSize = 18
+        button.Parent = frame
+        Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
+
+        button.MouseButton1Click:Connect(function()
+            shootMurderer()
+        end)
+    end
+})
+
+-- ======================= THROW KNIFE =======================
+Tab2:Divider()
+
+local function throwKnifeNearest()
+    local char = LocalPlayer.Character
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+
+    local holdKnife = char and char:FindFirstChild("Knife")
+    local backpackKnife = backpack and backpack:FindFirstChild("Knife")
+
+    if backpackKnife and not holdKnife then
+        WindUI:Notify({
+            Title = "Bạn chưa cầm dao / You not equip knife",
+            Content = "Cầm dao để phóng / Equip knife to throw",
+            Duration = 3,
+            Icon = "info",
+        })
+        return
+    end
+
+    if not backpackKnife and not holdKnife then
+        WindUI:Notify({
+            Title = "Bạn không phải Murderer / You are not Murderer",
+            Content = "Bạn phải là Murderer / You must be Murderer",
+            Duration = 3,
+            Icon = "info",
+        })
+        return
+    end
+
+    local nearestPlayer, minDist = nil, math.huge
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local dist = (plr.Character.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+            if dist < minDist then
+                minDist, nearestPlayer = dist, plr
+            end
+        end
+    end
+
+    if nearestPlayer and nearestPlayer.Character and LocalPlayer.Character then
+        local hrp = nearestPlayer.Character.HumanoidRootPart
+        local args = {
+            CFrame.new(LocalPlayer.Character.HumanoidRootPart.Position),
+            hrp.Position
+        }
+        LocalPlayer.Character:WaitForChild("Knife"):WaitForChild("Throw"):FireServer(unpack(args))
+    end
+end
+
+-- Throw Knife Nearest Button
+Tab2:Button({
+    Title = "Throw Knife Nearest",
+    Desc = "Phóng dao người chơi gần nhất",
+    Locked = false,
+    Callback = function()
+        throwKnifeNearest()
+    end
+})
+
+-- Throw Knife Gui Button
+Tab2:Button({
+    Title = "Throw Knife Gui",
+    Desc = "Mở GUI riêng để phóng dao",
+    Locked = false,
+    Callback = function()
+        if LocalPlayer.PlayerGui:FindFirstChild("ThrowKnifeGui") then return end
+
+        local gui = Instance.new("ScreenGui")
+        gui.Name = "ThrowKnifeGui"
+        gui.ResetOnSpawn = false
+        gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(0, 200, 0, 120)
+        frame.Position = UDim2.new(0.5, -100, 0.5, -60)
+        frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        frame.Active = true
+        frame.Draggable = true
+        frame.Parent = gui
+
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+
+        local title = Instance.new("TextLabel")
+        title.Size = UDim2.new(1, -30, 0, 30)
+        title.Position = UDim2.new(0, 10, 0, 0)
+        title.BackgroundTransparency = 1
+        title.Text = "Throw Knife Gui"
+        title.TextColor3 = Color3.fromRGB(255, 255, 255)
+        title.Font = Enum.Font.FredokaOne
+        title.TextSize = 18
+        title.TextXAlignment = Enum.TextXAlignment.Left
+        title.Parent = frame
+
+        local closeBtn = Instance.new("TextButton")
+        closeBtn.Size = UDim2.new(0, 25, 0, 25)
+        closeBtn.Position = UDim2.new(1, -30, 0, 3)
+        closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        closeBtn.Text = "X"
+        closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        closeBtn.Font = Enum.Font.FredokaOne
+        closeBtn.TextSize = 16
+        closeBtn.Parent = frame
+        Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 5)
+
+        closeBtn.MouseButton1Click:Connect(function()
+            gui:Destroy()
+        end)
+
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(1, -20, 0, 40)
+        button.Position = UDim2.new(0, 10, 0, 40)
+        button.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        button.Text = "Throw Knife"
+        button.TextColor3 = Color3.fromRGB(255, 255, 255)
+        button.Font = Enum.Font.FredokaOne
+        button.TextSize = 18
+        button.Parent = frame
+        Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
+
+        button.MouseButton1Click:Connect(function()
+            throwKnifeNearest()
+        end)
+    end
+})
+
+-- ======================= PICK UP GUN =======================
+Tab2:Divider() -- Divider mới
+
+local function pickupGun()
+    local char = LocalPlayer.Character
+    if not char then return end
+
+    local gunPart = nil
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Part") and obj.Name == "GunDrop" then
+            gunPart = obj
+            break
+        end
+    end
+
+    if not gunPart then
+        WindUI:Notify({
+            Title = "Không có súng để nhặt / There is no gun to take",
+            Content = "Vui lòng đợi Sheriff chết / Please wait Sheriff to dead",
+            Duration = 3,
+            Icon = "info",
+        })
+        return
+    end
+
+    -- Dịch chuyển nhân vật tới gun (hoặc pick up logic game)
+    if char:FindFirstChild("HumanoidRootPart") then
+        char.HumanoidRootPart.CFrame = CFrame.new(gunPart.Position + Vector3.new(0, 3, 0))
+    end
+end
+
+-- Nút nhặt súng
+Tab2:Button({
+    Title = "Pickup Gun",
+    Desc = "Nhặt súng trên map",
+    Locked = false,
+    Callback = function()
+        pickupGun()
+    end
+})
+
+-- Toggle auto nhặt súng
+local autoPickupEnabled = false
+Tab2:Toggle({
+    Title = "Auto Pickup Gun",
+    Desc = "Tự động nhặt súng khi có GunDrop trên map",
+    Icon = "check",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(state)
+        autoPickupEnabled = state
+        task.spawn(function()
+            while autoPickupEnabled do
+                pickupGun()
+                task.wait(1) -- kiểm tra mỗi giây
+            end
+        end)
+    end
+})
+
+-- ======================= FAST WIN =======================
+local FastWinSection = Tab2:Section({Title = "Fast Win", Icon = "zap"})
+Tab2:Divider()  -- vẫn giữ divider
+
+-- Nút Kill All trực tiếp trên Tab2
+local ButtonKillAll = Tab2:Button({
+    Title = "Kill All",
+    Desc = "Giết tất cả",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        local char = LocalPlayer.Character
+        local backpack = LocalPlayer:FindFirstChild("Backpack")
+
+        local holdKnife = char and char:FindFirstChild("Knife")
+        local backpackKnife = backpack and backpack:FindFirstChild("Knife")
+
+        -- Không ai có Gun -> trận đấu chưa bắt đầu
+        local anyGun = false
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr.Character then
+                if plr.Character:FindFirstChild("Gun") or plr.Backpack:FindFirstChild("Gun") then
+                    anyGun = true
+                    break
+                end
+            end
+        end
+        if not anyGun then
+            WindUI:Notify({
+                Title = "Trận đấu chưa bắt đầu? / Round not start?",
+                Content = "Vui lòng đợi trận đấu bắt đầu / Please wait for round start",
+                Duration = 3,
+                Icon = "message-square-warning",
+            })
+            return
+        end
+
+        -- Không cầm dao -> không phải murderer
+        if not backpackKnife and not holdKnife then
+            WindUI:Notify({
+                Title = "Bạn không phải là Murderer / You are not muderer",
+                Content = "Bạn phải là Murderer / You must be muderer",
+                Duration = 3,
+                Icon = "bird",
+            })
+            return
+        end
+
+        -- Bring tất cả về trước mặt local player
+        local localPos = char.HumanoidRootPart.CFrame * CFrame.new(0, 0, 5)
+        local originalPositions = {}
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = plr.Character.HumanoidRootPart
+                originalPositions[plr] = hrp.CFrame
+                hrp.CFrame = localPos
+            end
+        end
+
+        task.wait(2)
+
+        -- Trả về vị trí cũ
+        for plr, cf in pairs(originalPositions) do
+            if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                plr.Character.HumanoidRootPart.CFrame = cf
+            end
+        end
+    end
+})
+
+local ButtonInstantShot = Tab2:Button({
+    Title = "Instant Shot Murderer",
+    Desc = "Bắn Murderer nhanh",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        local char = LocalPlayer.Character
+        local backpack = LocalPlayer:FindFirstChild("Backpack")
+
+        local holdGun = char and char:FindFirstChild("Gun")
+        local backpackGun = backpack and backpack:FindFirstChild("Gun")
+
+        -- Kiểm tra ai là murderer (có dao)
+        local murdererPlayer = nil
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer and plr.Character then
+                local hasKnife = plr.Character:FindFirstChild("Knife")
+                if hasKnife then
+                    murdererPlayer = plr
+                    break
+                end
+            end
+        end
+
+        if not murdererPlayer then
+            WindUI:Notify({
+                Title = "Không tìm thấy Murderer / No murderer found",
+                Content = "Đợi trận đấu tiếp theo / Wait for next round",
+                Duration = 3,
+                Icon = "info",
+            })
+            return
+        end
+
+        -- Kiểm tra súng
+        if not backpackGun and not holdGun then
+            WindUI:Notify({
+                Title = "Bạn không có súng / You do not have Gun",
+                Content = "Nhặt súng để bắn / Take the gun to shoot",
+                Duration = 3,
+                Icon = "info",
+            })
+            return
+        end
+
+        -- Lấy HumanoidRootPart của murderer
+        local mdrHrp = murdererPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not mdrHrp then return end
+
+        -- Lưu vị trí gốc để trả lại
+        local originalCFrame = mdrHrp.CFrame
+
+        -- Teleport murderer về trước mặt local player
+        local targetCFrame = char.HumanoidRootPart.CFrame * CFrame.new(0,0,5)
+        mdrHrp.CFrame = targetCFrame
+
+        -- Giữ 5 giây
+        task.wait(5)
+
+        -- Trả lại vị trí cũ
+        mdrHrp.CFrame = originalCFrame
+
+        -- Đợi 1 giây
+        task.wait(1)
+
+        -- Cầm súng nếu chưa cầm
+        if not holdGun and backpackGun then
+            backpackGun.Parent = char
+            holdGun = char:FindFirstChild("Gun")
+        end
+
+        -- Bắn murderer
+        if holdGun then
+            shootMurderer()
+        end
+    end
+})
+
+local player = game.Players.LocalPlayer
+local gui = Instance.new("ScreenGui")
+gui.Name = "CircleButtonGui"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Nút ảnh tròn
+local button = Instance.new("ImageButton")
+button.Name = "CircleButton"
+button.Size = UDim2.new(0, 60, 0, 60)
+button.Position = UDim2.new(0, 100, 0, 100)
+button.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Màu nền đen
+button.Image = "rbxassetid://116721573962136" -- Thay ID nếu muốn
+button.BackgroundTransparency = 0
+button.AutoButtonColor = false
+button.Active = true
+button.ZIndex = 99999 -- ZIndex cao để luôn hiển thị trên cùng
+button.Parent = gui
+
+-- Bo tròn nút
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0.5, 0)
+corner.Parent = button
+
+-- Viền xanh dương bên ngoài
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(0, 120, 255) -- Xanh dương
+stroke.Thickness = 2
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+stroke.Parent = button
+
+-- Kéo nút
+local dragging = false
+local dragInput, mouseStartPos, elementStartPos
+local userInputService = game:GetService("UserInputService")
+
+button.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		mouseStartPos = input.Position
+		elementStartPos = button.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+button.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+userInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - mouseStartPos
+		button.Position = UDim2.new(
+			elementStartPos.X.Scale, elementStartPos.X.Offset + delta.X,
+			elementStartPos.Y.Scale, elementStartPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+-- Click để mở/đóng cửa sổ
+local isWindowOpen = false
+
+-- Giả định có biến Window chứa module hoặc đối tượng có hàm Open/Close
+-- Bạn cần gán Window thủ công ở nơi khác, ví dụ:
+-- local Window = require(game.ReplicatedStorage.MyWindowModule)
+
+button.MouseButton1Click:Connect(function()
+	isWindowOpen = not isWindowOpen
+	if isWindowOpen then
+		if Window and Window.Open then
+			Window:Open()
+		end
+	else
+		if Window and Window.Close then
+			Window:Close()
+		end
+	end
+end)
