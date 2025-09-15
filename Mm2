@@ -17,7 +17,7 @@ local Window = WindUI:CreateWindow({
     ScrollBarEnabled = true,
 })
 
-Window:Tag({Title = "v1.0 BETA", Color = Color3.fromHex("#ff0000")})
+local VersionTag = Window:Tag({Title = "v1.2 [BETA]", Color = Color3.fromHex("#ff0000")})
 
 local TimeTag = Window:Tag({Title = "00:00", Color = Color3.fromHex("#000000")})
 
@@ -37,6 +37,18 @@ task.spawn(function()
         task.wait(0.06)
     end
 end)
+
+local hue = 0
+task.spawn(function()
+    while true do
+        hue = (hue + 0.01) % 1
+        local color = Color3.fromHSV(hue, 1, 1)
+
+        VersionTag:SetColor(color)
+        task.wait(0.06)
+    end
+end)
+
 
 Window:CreateTopbarButton("theme-switcher", "moon", function()
     WindUI:SetTheme(WindUI:GetCurrentTheme() == "Dark" and "Light" or "Dark")
@@ -447,6 +459,12 @@ local function pickupGun()
     local char = LocalPlayer.Character
     if not char then return end
 
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    -- Lưu vị trí hiện tại
+    local originalCFrame = hrp.CFrame
+
     local gunPart = nil
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("Part") and obj.Name == "GunDrop" then
@@ -465,10 +483,14 @@ local function pickupGun()
         return
     end
 
-    -- Dịch chuyển nhân vật tới gun (hoặc pick up logic game)
-    if char:FindFirstChild("HumanoidRootPart") then
-        char.HumanoidRootPart.CFrame = CFrame.new(gunPart.Position + Vector3.new(0, 3, 0))
-    end
+    -- Dịch chuyển tới gun
+    hrp.CFrame = CFrame.new(gunPart.Position + Vector3.new(0, 3, 0))
+
+    -- Nếu muốn delay một chút để game nhận việc nhặt súng
+    wait(0.1)
+
+    -- Tele lại vị trí ban đầu
+    hrp.CFrame = originalCFrame
 end
 
 -- Nút nhặt súng
@@ -509,67 +531,72 @@ local ButtonKillAll = Tab2:Button({
     Title = "Kill All",
     Desc = "Giết tất cả",
     Callback = function()
-        local Players = game:GetService("Players")
-        local LocalPlayer = Players.LocalPlayer
-        local char = LocalPlayer.Character
-        local backpack = LocalPlayer:FindFirstChild("Backpack")
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local char = LocalPlayer.Character
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
 
-        local holdKnife = char and char:FindFirstChild("Knife")
-        local backpackKnife = backpack and backpack:FindFirstChild("Knife")
+    local holdKnife = char and char:FindFirstChild("Knife")
+    local backpackKnife = backpack and backpack:FindFirstChild("Knife")
 
-        -- Không ai có Gun -> trận đấu chưa bắt đầu
-        local anyGun = false
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr.Character then
-                if plr.Character:FindFirstChild("Gun") or plr.Backpack:FindFirstChild("Gun") then
-                    anyGun = true
-                    break
-                end
-            end
-        end
-        if not anyGun then
-            WindUI:Notify({
-                Title = "Trận đấu chưa bắt đầu? / Round not start?",
-                Content = "Vui lòng đợi trận đấu bắt đầu / Please wait for round start",
-                Duration = 3,
-                Icon = "message-square-warning",
-            })
-            return
-        end
-
-        -- Không cầm dao -> không phải murderer
-        if not backpackKnife and not holdKnife then
-            WindUI:Notify({
-                Title = "Bạn không phải là Murderer / You are not muderer",
-                Content = "Bạn phải là Murderer / You must be muderer",
-                Duration = 3,
-                Icon = "bird",
-            })
-            return
-        end
-
-        -- Bring tất cả về trước mặt local player
-        local localPos = char.HumanoidRootPart.CFrame * CFrame.new(0, 0, 5)
-        local originalPositions = {}
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                local hrp = plr.Character.HumanoidRootPart
-                originalPositions[plr] = hrp.CFrame
-                hrp.CFrame = localPos
-            end
-        end
-
-        task.wait(2)
-
-        -- Trả về vị trí cũ
-        for plr, cf in pairs(originalPositions) do
-            if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                plr.Character.HumanoidRootPart.CFrame = cf
+    -- Không ai có Gun -> trận đấu chưa bắt đầu
+    local anyGun = false
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr.Character then
+            if plr.Character:FindFirstChild("Gun") or plr.Backpack:FindFirstChild("Gun") then
+                anyGun = true
+                break
             end
         end
     end
+    if not anyGun then
+        WindUI:Notify({
+            Title = "Trận đấu chưa bắt đầu? / Round not start?",
+            Content = "Vui lòng đợi trận đấu bắt đầu / Please wait for round start",
+            Duration = 3,
+            Icon = "info",
+        })
+        return
+    end
+
+    -- Không cầm dao -> không phải murderer
+    if not backpackKnife and not holdKnife then
+        WindUI:Notify({
+            Title = "Bạn không phải là Murderer / You are not muderer",
+            Content = "Bạn phải là Murderer / You must be muderer",
+            Duration = 3,
+            Icon = "info",
+        })
+        return
+    end
+
+    -- Bring và freeze tất cả về trước mặt local player
+    local localPos = char.HumanoidRootPart.CFrame * CFrame.new(0,0,-5)
+    local originalPositions = {}
+    local frozen = {}
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = plr.Character.HumanoidRootPart
+            originalPositions[plr] = hrp.CFrame
+            frozen[plr] = true
+            hrp.CFrame = localPos
+        end
+    end
+
+    -- Freeze trong 2s
+    local startTime = tick()
+    while tick() - startTime < 2 do
+        for plr, isFrozen in pairs(frozen) do
+            if isFrozen and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                plr.Character.HumanoidRootPart.CFrame = localPos
+            end
+        end
+        task.wait()
+    end
+end
 })
 
+-- Instant Shot Murderer
 local ButtonInstantShot = Tab2:Button({
     Title = "Instant Shot Murderer",
     Desc = "Bắn Murderer nhanh",
@@ -582,11 +609,11 @@ local ButtonInstantShot = Tab2:Button({
         local holdGun = char and char:FindFirstChild("Gun")
         local backpackGun = backpack and backpack:FindFirstChild("Gun")
 
-        -- Kiểm tra ai là murderer (có dao)
+        -- Kiểm tra ai là murderer (có dao cầm hoặc trong backpack)
         local murdererPlayer = nil
         for _, plr in pairs(Players:GetPlayers()) do
             if plr ~= LocalPlayer and plr.Character then
-                local hasKnife = plr.Character:FindFirstChild("Knife")
+                local hasKnife = plr.Character:FindFirstChild("Knife") or plr.Backpack:FindFirstChild("Knife")
                 if hasKnife then
                     murdererPlayer = plr
                     break
@@ -619,20 +646,12 @@ local ButtonInstantShot = Tab2:Button({
         local mdrHrp = murdererPlayer.Character:FindFirstChild("HumanoidRootPart")
         if not mdrHrp then return end
 
-        -- Lưu vị trí gốc để trả lại
-        local originalCFrame = mdrHrp.CFrame
-
         -- Teleport murderer về trước mặt local player
-        local targetCFrame = char.HumanoidRootPart.CFrame * CFrame.new(0,0,5)
+        local targetCFrame = char.HumanoidRootPart.CFrame * CFrame.new(0,0,-5)
         mdrHrp.CFrame = targetCFrame
+        mdrHrp.Anchored = true -- freeze HRP
 
-        -- Giữ 5 giây
-        task.wait(5)
-
-        -- Trả lại vị trí cũ
-        mdrHrp.CFrame = originalCFrame
-
-        -- Đợi 1 giây
+        -- Đợi 1 giây rồi bắn
         task.wait(1)
 
         -- Cầm súng nếu chưa cầm
@@ -641,10 +660,16 @@ local ButtonInstantShot = Tab2:Button({
             holdGun = char:FindFirstChild("Gun")
         end
 
-        -- Bắn murderer
+        -- Bắn murderer 1 lần
         if holdGun then
             shootMurderer()
         end
+
+        -- Tiếp tục freeze đến đủ 5 giây
+        task.wait(4)
+
+        -- Mở khóa HRP
+        mdrHrp.Anchored = false
     end
 })
 
