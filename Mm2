@@ -294,6 +294,17 @@ Tab2:Button({
         title.TextXAlignment = Enum.TextXAlignment.Left
         title.Parent = frame
 
+        local subtitle = Instance.new("TextLabel")
+        subtitle.Size = UDim2.new(1, -30, 0, 30)
+        subtitle.Position = UDim2.new(0, 100, 0, 40)
+        subtitle.BackgroundTransparency = 1
+        subtitle.Text = "Shot Murderer Gui"
+        subtitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+        subtitle.Font = Enum.Font.FredokaOne
+        subtitle.TextSize = 18
+        subtitle.TextXAlignment = Enum.TextXAlignment.Left
+        subtitle.Parent = frame
+
         local closeBtn = Instance.new("TextButton")
         closeBtn.Size = UDim2.new(0, 25, 0, 25)
         closeBtn.Position = UDim2.new(1, -30, 0, 3)
