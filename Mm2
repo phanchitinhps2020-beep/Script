@@ -1,6 +1,9 @@
+-- Script kick player với thông báo
+game.Players.LocalPlayer:Kick("Đang cập nhật script...")
+
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 WindUI:SetNotificationLower(true)
-WindUI:SetFont("rbxasset://fonts/families/FredokaOne.json")
+WindUI:SetFont("rbxasset://fonts/families/FredokaOne.json"
 
 local Window = WindUI:CreateWindow({
     Title = "Flandre Hub",
