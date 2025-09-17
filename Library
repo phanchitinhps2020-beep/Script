@@ -138,7 +138,7 @@ function library:Window(name)
     Minimise2.Parent = Header
     Minimise2.BackgroundColor3 = Color3.fromRGB(0, 168, 255)
     Minimise2.BorderColor3 = Color3.fromRGB(0, 168, 255)
-    Minimise2.Position = UDim2.new(0, 185, 0, 2)
+    Minimise2.Position = UDim2.new(0, 175, 0, 2)
     Minimise2.Size = UDim2.new(0, 22, 0, 22)
     Minimise2.ZIndex = 7 + zindex
     Minimise2.Font = Enum.Font.SourceSansLight
@@ -155,7 +155,7 @@ function library:Window(name)
     Minimise.Parent = Header
     Minimise.BackgroundColor3 = Color3.fromRGB(0, 168, 255)
     Minimise.BorderColor3 = Color3.fromRGB(0, 168, 255)
-    Minimise.Position = UDim2.new(0, 175, 0, 2)
+    Minimise.Position = UDim2.new(0, 160, 0, 2)
     Minimise.Size = UDim2.new(0, 22, 0, 22)
     Minimise.ZIndex = 7 + zindex
     Minimise.Font = Enum.Font.SourceSansLight
