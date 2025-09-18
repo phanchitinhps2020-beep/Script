@@ -61,7 +61,7 @@ local Window = WindUI:CreateWindow({
     ScrollBarEnabled = true,
 })
 
-local VersionTag = Window:Tag({Title = "v1.5 [BETA]", Color = Color3.fromHex("#ff0000")})
+local VersionTag = Window:Tag({Title = "v1.55 [BETA]", Color = Color3.fromHex("#ff0000")})
 
 local TimeTag = Window:Tag({Title = "00:00", Color = Color3.fromHex("#000000")})
 
@@ -943,6 +943,144 @@ local Toggle = Tab2:Toggle({
                 getgenv().CoinFarmBV = nil
             end
             getgenv().CurrentCoin = nil
+        end)
+    end
+})
+
+local Toggle = Tab2:Toggle({
+    Title = "Coin Farm (ball)",
+    Desc = "Farm tiền (banh)",
+    Icon = "crown",
+    Type = "Checkbox",
+    Default = false,
+    Callback = function(A) 
+        local Players = game:GetService("Players")
+        local RunService = game:GetService("RunService")
+        local Workspace = game:GetService("Workspace")
+
+        local player = Players.LocalPlayer
+
+        -- GLOBAL
+        getgenv().AutoCoin = A
+        getgenv().Speed = 20
+        getgenv().CurrentCoin = nil
+
+        -- cleanup function
+        local function cleanup()
+            getgenv().AutoCoin = false
+            getgenv().CurrentCoin = nil
+            if getgenv().CoinFarmBV then
+                getgenv().CoinFarmBV:Destroy()
+                getgenv().CoinFarmBV = nil
+            end
+            if getgenv().FarmConn then
+                getgenv().FarmConn:Disconnect()
+                getgenv().FarmConn = nil
+            end
+            local char = player.Character
+            if char then
+                for _, p in pairs(char:GetDescendants()) do
+                    if p:IsA("BasePart") then
+                        p.CanCollide = true
+                    end
+                end
+            end
+        end
+
+        -- nếu toggle OFF thì cleanup luôn
+        if not getgenv().AutoCoin then
+            cleanup()
+            return
+        end
+
+        -- tạo BodyVelocity duy nhất
+        local function ensureBV()
+            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                if not getgenv().CoinFarmBV or not getgenv().CoinFarmBV.Parent then
+                    local bv = Instance.new("BodyVelocity")
+                    bv.MaxForce = Vector3.new(1e5,1e5,1e5)
+                    bv.Velocity = Vector3.new()
+                    bv.Parent = hrp
+                    getgenv().CoinFarmBV = bv
+                end
+            end
+        end
+
+        -- noclip update
+        local function noclipUpdate()
+            local char = player.Character
+            if char then
+                for _, p in pairs(char:GetDescendants()) do
+                    if p:IsA("BasePart") then
+                        p.CanCollide = false
+                    end
+                end
+            end
+        end
+
+        -- lấy coin gần nhất
+        local function getNearestCoin(hrp)
+            local nearest, dist = nil, math.huge
+            for _, obj in pairs(Workspace:GetDescendants()) do
+                if obj.Name == "Coin_Server" and obj:IsA("BasePart") and not obj:GetAttribute("Taken") then
+                    local d = (hrp.Position - obj.Position).Magnitude
+                    if d < dist then
+                        dist = d
+                        nearest = obj
+                    end
+                end
+            end
+            return nearest
+        end
+
+        -- ngắt Heartbeat cũ nếu có
+        if getgenv().FarmConn then 
+            getgenv().FarmConn:Disconnect() 
+            getgenv().FarmConn = nil
+        end
+
+        -- Heartbeat loop
+        getgenv().FarmConn = RunService.Heartbeat:Connect(function()
+            if not getgenv().AutoCoin then 
+                cleanup()
+                return 
+            end
+
+            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+
+            noclipUpdate()
+            ensureBV()
+
+            local bv = getgenv().CoinFarmBV
+            if not bv then return end
+
+            local coin = getgenv().CurrentCoin
+            if not coin or not coin.Parent then
+                coin = getNearestCoin(hrp)
+                getgenv().CurrentCoin = coin
+            end
+
+            if coin and coin.Parent then
+                local targetPos = Vector3.new(coin.Position.X, coin.Position.Y - 3, coin.Position.Z)
+                local dist = (hrp.Position - targetPos).Magnitude
+
+                if dist > 0 then
+                    local dir = (targetPos - hrp.Position).Unit
+                    bv.Velocity = dir * getgenv().Speed
+                else
+                    pcall(function() coin:SetAttribute("Taken", true) end)
+                    getgenv().CurrentCoin = nil
+                end
+            else
+                bv.Velocity = Vector3.new()
+            end
+        end)
+
+        -- cleanup khi respawn
+        player.CharacterAdded:Connect(function()
+            cleanup()
         end)
     end
 })
