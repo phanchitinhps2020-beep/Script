@@ -1066,7 +1066,7 @@ local Toggle = Tab2:Toggle({
                 local targetPos = Vector3.new(coin.Position.X, coin.Position.Y - 3, coin.Position.Z)
                 local dist = (hrp.Position - targetPos).Magnitude
 
-                if dist > 0 then
+                if dist > 1 then
                     local dir = (targetPos - hrp.Position).Unit
                     bv.Velocity = dir * getgenv().Speed
                 else
