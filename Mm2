@@ -948,8 +948,8 @@ local Toggle = Tab2:Toggle({
 })
 
 local Toggle = Tab2:Toggle({
-    Title = "Coin Farm (ball)",
-    Desc = "Farm tiền (banh)",
+    Title = "Coin Farm V2 (recommended) (ball)",
+    Desc = "Farm tiền V2 (khuyên dùng) (banh)",
     Icon = "crown",
     Type = "Checkbox",
     Default = false,
