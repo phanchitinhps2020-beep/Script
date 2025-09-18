@@ -53,7 +53,7 @@ local Window = WindUI:CreateWindow({
     Folder = "Flandre Hub",
     Size = UDim2.fromOffset(1, 1),
     Transparent = false,
-    Theme = "Dark",
+    Theme = "Light",
     SideBarWidth = 150,
     Background = "",
     BackgroundImageTransparency = 0.42,
@@ -61,7 +61,9 @@ local Window = WindUI:CreateWindow({
     ScrollBarEnabled = true,
 })
 
-local VersionTag = Window:Tag({Title = "v1.5555 [BETA]", Color = Color3.fromHex("#ff0000")})
+Window:SetBackgroundImage("rbxassetid://128715667204667")
+
+local VersionTag = Window:Tag({Title = "v1.55 [BETA]", Color = Color3.fromHex("#ff0000")})
 
 local TimeTag = Window:Tag({Title = "00:00", Color = Color3.fromHex("#000000")})
 
