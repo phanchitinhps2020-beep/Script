@@ -61,7 +61,7 @@ local Window = WindUI:CreateWindow({
     ScrollBarEnabled = true,
 })
 
-local VersionTag = Window:Tag({Title = "v1.55 [BETA]", Color = Color3.fromHex("#ff0000")})
+local VersionTag = Window:Tag({Title = "v1.5555 [BETA]", Color = Color3.fromHex("#ff0000")})
 
 local TimeTag = Window:Tag({Title = "00:00", Color = Color3.fromHex("#000000")})
 
