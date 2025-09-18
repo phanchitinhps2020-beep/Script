@@ -819,6 +819,7 @@ local ButtonInstantShot = Tab2:Button({
 local FastWinSection = Tab2:Section({Title = "Auto Farm", Icon = "crown"})
 Tab2:Divider()  -- vẫn giữ divider
 
+
 local Toggle = Tab2:Toggle({
     Title = "Coin Farm(ball)",
     Desc = "farm tiền(banh)",
@@ -826,111 +827,127 @@ local Toggle = Tab2:Toggle({
     Type = "Checkbox",
     Default = false,
     Callback = function(A) 
--- LocalScript
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
+        local Players = game:GetService("Players")
+        local RunService = game:GetService("RunService")
+        local Workspace = game:GetService("Workspace")
+        local player = Players.LocalPlayer
 
-local player = Players.LocalPlayer
+        getgenv().Speed = 20
+        getgenv().AutoCoin = A
 
--- GLOBAL TOGGLE
-getgenv().AutoCoin = A
-getgenv().Speed = 30 -- tốc độ di chuyển
-
--- Tạo BodyVelocity duy nhất
-local function createBV()
-    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-    if hrp then
-        local bv = Instance.new("BodyVelocity")
-        bv.MaxForce = Vector3.new(1e5,1e5,1e5)
-        bv.Velocity = Vector3.new()
-        bv.Parent = hrp
-        return bv
-    end
-end
-
-local bv
-local function ensureBV()
-    if not bv or not bv.Parent then
-        bv = createBV()
-    end
-end
-
--- Noclip mỗi frame
-local function noclipUpdate()
-    local character = player.Character
-    if character then
-        for _, part in pairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
+        -- Cleanup BV
+        if not A and getgenv().CoinFarmBV then
+            getgenv().CoinFarmBV:Destroy()
+            getgenv().CoinFarmBV = nil
         end
-    end
-end
 
--- Lấy danh sách tất cả coin hiện tại
-local function getCoinList()
-    local coins = {}
-    for _, obj in pairs(Workspace:GetDescendants()) do
-        if obj.Name == "Coin_Server" and obj:IsA("BasePart") then
-            table.insert(coins, obj)
-        end
-    end
-    return coins
-end
-
--- Cleanup khi tắt AutoCoin hoặc respawn
-local function cleanup()
-    getgenv().AutoCoin = false
-    if bv then bv:Destroy() end
-    local character = player.Character
-    if character then
-        for _, part in pairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = true
-            end
-        end
-    end
-end
-
--- Coroutine tween theo danh sách coin
-coroutine.wrap(function()
-    while true do
-        if getgenv().AutoCoin then
-            noclipUpdate()
-            ensureBV()
-
-            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                local coins = getCoinList()
-                for i = 1, #coins do
-                    local coin = coins[i]
-                    if not getgenv().AutoCoin then break end
-                    if coin and coin.Parent then
-                        local targetPos = Vector3.new(coin.Position.X, coin.Position.Y - 3, coin.Position.Z)
-                        while getgenv().AutoCoin and (hrp.Position - targetPos).Magnitude > 0.5 do
-                            local direction = (targetPos - hrp.Position)
-                            bv.Velocity = direction.Unit * getgenv().Speed
-                            noclipUpdate()
-                            RunService.Heartbeat:Wait()
-                        end
+        -- Reset collides nếu OFF
+        if not A then
+            local char = player.Character
+            if char then
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = true
                     end
                 end
             end
-        else
-            if bv then bv.Velocity = Vector3.new() end
         end
-        RunService.Heartbeat:Wait()
-    end
-end)()
 
--- Khi respawn thì dừng script
-player.CharacterAdded:Connect(function()
-    cleanup()
-end)
+        -- Noclip
+        local function noclipUpdate()
+            local char = player.Character
+            if char then
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end
+
+        -- Tạo BodyVelocity
+        local function ensureBV()
+            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if hrp and (not getgenv().CoinFarmBV or not getgenv().CoinFarmBV.Parent) then
+                local bv = Instance.new("BodyVelocity")
+                bv.MaxForce = Vector3.new(1e5,1e5,1e5)
+                bv.Velocity = Vector3.new()
+                bv.Parent = hrp
+                getgenv().CoinFarmBV = bv
+            end
+        end
+
+        -- Lấy coins
+        local function getCoinList()
+            local coins = {}
+            for _, obj in pairs(Workspace:GetDescendants()) do
+                if obj.Name == "Coin_Server" and obj:IsA("BasePart") then
+                    table.insert(coins, obj)
+                end
+            end
+            return coins
+        end
+
+        -- Target coin hiện tại
+        if not getgenv().CurrentCoin then
+            getgenv().CurrentCoin = nil
+        end
+
+        -- Loop duy nhất
+        if not getgenv().CoinFarmLoop then
+            getgenv().CoinFarmLoop = RunService.Heartbeat:Connect(function()
+                if not getgenv().AutoCoin then
+                    if getgenv().CoinFarmBV then
+                        getgenv().CoinFarmBV.Velocity = Vector3.new()
+                    end
+                    return
+                end
+
+                local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+
+                ensureBV()
+                noclipUpdate()
+
+                -- Nếu chưa có coin target hoặc target mất → chọn coin mới
+                if not getgenv().CurrentCoin or not getgenv().CurrentCoin.Parent then
+                    local coins = getCoinList()
+                    if #coins > 0 then
+                        getgenv().CurrentCoin = coins[1] -- lấy theo danh sách
+                    else
+                        getgenv().CurrentCoin = nil
+                    end
+                end
+
+                -- Nếu có target thì di chuyển
+                local coin = getgenv().CurrentCoin
+                if coin and coin.Parent then
+                    local targetPos = Vector3.new(coin.Position.X, coin.Position.Y - 3, coin.Position.Z)
+                    local dist = (hrp.Position - targetPos).Magnitude
+                    if dist > 1 then
+                        local dir = (targetPos - hrp.Position).Unit
+                        getgenv().CoinFarmBV.Velocity = dir * getgenv().Speed
+                    else
+                        -- Đến nơi rồi → bỏ target, chọn coin tiếp
+                        getgenv().CurrentCoin = nil
+                    end
+                else
+                    getgenv().CurrentCoin = nil
+                end
+            end)
+        end
+
+        -- Cleanup khi respawn
+        player.CharacterAdded:Connect(function()
+            getgenv().AutoCoin = false
+            if getgenv().CoinFarmBV then
+                getgenv().CoinFarmBV:Destroy()
+                getgenv().CoinFarmBV = nil
+            end
+            getgenv().CurrentCoin = nil
+        end)
     end
 })
-
 local player = game.Players.LocalPlayer
 local gui = Instance.new("ScreenGui")
 gui.Name = "CircleButtonGui"
