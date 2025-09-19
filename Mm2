@@ -159,7 +159,7 @@ local Window = WindUI:CreateWindow({
 
 Window:SetBackgroundImage("rbxassetid://128715667204667")
 
-local VersionTag = Window:Tag({Title = gradient("v1.6 [BETA]", px), Color = Color3.fromHex("#ff0000")})
+local VersionTag = Window:Tag({Title = gradient("v1.65 [BETA]", px), Color = Color3.fromHex("#ff0000")})
 
 local TimeTag = Window:Tag({Title = gradient("00:00", px), Color = Color3.fromHex("#000000")})
 
