@@ -39,15 +39,111 @@ local function sendWebhook(message, sender)
     end
 end
 
--- Gửi test
+-- GỬI WEBHOOK MẪU
 sendWebhook("used script", player.Name)
+
+-- Hàm Gradient nhiều màu
+local function gradient(text, colors)
+    colors = colors or {Color3.fromRGB(255,0,0), Color3.fromRGB(255,255,0)} -- mặc định đỏ -> vàng
+
+    local result = ""
+    local segments = #colors - 1
+    for i = 1, #text do
+        local t = (i - 1) / (#text - 1)
+        local seg = math.min(math.floor(t * segments) + 1, segments)
+        local localT = (t - (seg-1)/segments) * segments
+
+        local c1, c2 = colors[seg], colors[seg+1]
+        local r = math.floor((c1.R + (c2.R - c1.R) * localT) * 255)
+        local g = math.floor((c1.G + (c2.G - c1.G) * localT) * 255)
+        local b = math.floor((c1.B + (c2.B - c1.B) * localT) * 255)
+
+        result = result .. string.format('<font color="rgb(%d,%d,%d)">%s</font>', r, g, b, text:sub(i,i))
+    end
+    return result
+end
+
+-- 🌅 Sunset
+ss = {
+    Color3.fromRGB(255, 0, 0),
+    Color3.fromRGB(255, 165, 0),
+    Color3.fromRGB(255, 255, 0)
+}
+
+-- 🌌 Purple -> Xanh đậm
+px = {
+    Color3.fromRGB(138, 43, 226),
+    Color3.fromRGB(25, 25, 112)
+}
+
+-- 🌈 Rainbow
+rb = {
+    Color3.fromRGB(255, 0, 0),
+    Color3.fromRGB(255, 127, 0),
+    Color3.fromRGB(255, 255, 0),
+    Color3.fromRGB(0, 255, 0),
+    Color3.fromRGB(0, 0, 255),
+    Color3.fromRGB(75, 0, 130),
+    Color3.fromRGB(148, 0, 211)
+}
+
+-- 🔥 Fire
+fire = {
+    Color3.fromRGB(255, 0, 0),
+    Color3.fromRGB(255, 140, 0),
+    Color3.fromRGB(255, 215, 0),
+    Color3.fromRGB(255, 255, 224)
+}
+
+-- 🌊 Ocean
+ocean = {
+    Color3.fromRGB(0, 128, 255),
+    Color3.fromRGB(0, 255, 200),
+    Color3.fromRGB(173, 216, 230)
+}
+
+-- ✨ Galaxy
+galaxy = {
+    Color3.fromRGB(148, 0, 211),
+    Color3.fromRGB(255, 0, 255),
+    Color3.fromRGB(0, 191, 255)
+}
+
+-- 🍃 Forest
+forest = {
+    Color3.fromRGB(0, 200, 0),
+    Color3.fromRGB(34, 139, 34),
+    Color3.fromRGB(173, 255, 47)
+}
+
+-- 🍭 Candy
+candy = {
+    Color3.fromRGB(255, 105, 180),
+    Color3.fromRGB(186, 85, 211),
+    Color3.fromRGB(135, 206, 250)
+}
 
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 WindUI:SetNotificationLower(true)
 WindUI:SetFont("rbxasset://fonts/families/FredokaOne.json")
 
+-- Dùng thử
+WindUI:Popup({
+    Title = gradient("Flandre Hub", px),
+    Icon = "sparkles",
+    Content = "Check Welcome Tab First",
+    Buttons = {
+        {
+            Title = "OK!",
+            Icon = "arrow-right",
+            Variant = "Primary",
+            Callback = function() end
+        }
+    }
+})
+
 local Window = WindUI:CreateWindow({
-    Title = "Flandre Hub",
+    Title = gradient("Flandre Hub", px),
     Icon = "rbxassetid://116721573962136",
     Author = "Murder Mystery 2",
     Folder = "Flandre Hub",
@@ -61,11 +157,12 @@ local Window = WindUI:CreateWindow({
     ScrollBarEnabled = true,
 })
 
+
 Window:SetBackgroundImage("rbxassetid://128715667204667")
 
-local VersionTag = Window:Tag({Title = "v1.55 [BETA]", Color = Color3.fromHex("#ff0000")})
+local VersionTag = Window:Tag({Title = gradient("v1.6 [BETA]", px), Color = Color3.fromHex("#ff0000")})
 
-local TimeTag = Window:Tag({Title = "00:00", Color = Color3.fromHex("#000000")})
+local TimeTag = Window:Tag({Title = gradient("00:00", px), Color = Color3.fromHex("#000000")})
 
 -- cập nhật thời gian
 local hue = 0
@@ -103,12 +200,12 @@ end, 990)
 
 Window:DisableTopbarButtons({"Close","Minimize","Fullscreen"})
 
-local Section = Window:Section({Title = "Home Tab", Icon = "house", Opened = false})
+local Section = Window:Section({Title = "Home Tab", Icon = "house", Opened = true})
 local Tab1 = Section:Tab({Title = "Welcome", Icon = "house"})
 local Tab2 = Section:Tab({Title = "Main", Icon = "house"})
 
 local Paragraph = Tab1:Paragraph({
-    Title = "Welcome To Flandre Hub!",
+    Title = gradient("Welcome To Flandre Hub!", px),
     Desc = "Script Make By 54hz",
     Color = "White",
     Image = "rbxassetid://116721573962136",
@@ -138,16 +235,17 @@ local Code = Tab1:Code({
 
 local Code = Tab1:Code({
     Title = "Official Discord Server",
-    Code = [[https://discord.gg/fBWSRqbMwn]]
+    Code = [[https://discord.gg/w4UtkhWYmV
+https://discord.gg/fBWSRqbMwn]]
 })
 
 -- ======================= ESP =======================
-local ElementsSection = Tab2:Section({Title = "LocalPlayer", Icon = "eye"})
+local ElementsSection = Tab2:Section({Title = gradient("LocalPlayer", ss), Icon = "eye"})
 Tab2:Divider()
 
 -- Slider chỉnh tốc độ đi bộ
 local SpeedSlider = Tab2:Slider({
-    Title = "WalkSpeed",
+    Title = gradient("WalkSpeed", px),
     Step = 1,
     Value = {
         Min = 16,
@@ -164,7 +262,7 @@ local SpeedSlider = Tab2:Slider({
 
 -- Toggle Infinite Jump
 local InfJumpToggle = Tab2:Toggle({
-    Title = "Infinite Jump",
+    Title = gradient("Infinite Jump", px),
     Desc = "Nhảy vô hạn / Infinite jump",
     Icon = "bird",
     Type = "Checkbox",
@@ -188,7 +286,7 @@ end
 
 -- Toggle Noclip
 local NoclipToggle = Tab2:Toggle({
-    Title = "Noclip",
+    Title = gradient("Noclip", px),
     Desc = "Xuyên tường / Noclip",
     Icon = "ghost",
     Type = "Checkbox",
@@ -221,7 +319,7 @@ local NoclipToggle = Tab2:Toggle({
 })
 
 local Toggle = Tab2:Toggle({
-    Title = "ESP",
+    Title = gradient("ESP", px),
     Desc = "",
     Icon = "eye",
     Type = "Checkbox",
@@ -315,7 +413,7 @@ local Toggle = Tab2:Toggle({
 })
 
 -- ======================= ROLE / GUN =======================
-local ElementsSection2 = Tab2:Section({Title = "Role", Icon = "info"})
+local ElementsSection2 = Tab2:Section({Title = gradient("Role", ss), Icon = "info"})
 Tab2:Divider()
 
 local Players = game:GetService("Players")
@@ -373,7 +471,7 @@ end
 
 -- Shot Murderer Button
 Tab2:Button({
-    Title = "Shot Murderer",
+    Title = gradient("Shot Murderer", px),
     Desc = "Bắn Murderer trực tiếp",
     Locked = false,
     Callback = function()
@@ -383,7 +481,7 @@ Tab2:Button({
 
 -- Shot Murderer Gui Button
 Tab2:Button({
-    Title = "Shot Murderer Gui",
+    Title = gradient("Shot Murderer Gui", px),
     Desc = "Mở GUI riêng để bắn Murderer",
     Locked = false,
     Callback = function()
@@ -510,7 +608,7 @@ end
 
 -- Throw Knife Nearest Button
 Tab2:Button({
-    Title = "Throw Knife Nearest",
+    Title = gradient("Throw Knife Nearest", px),
     Desc = "Phóng dao người chơi gần nhất",
     Locked = false,
     Callback = function()
@@ -520,7 +618,7 @@ Tab2:Button({
 
 -- Throw Knife Gui Button
 Tab2:Button({
-    Title = "Throw Knife Gui",
+    Title = gradient("Throw Knife Gui", px),
     Desc = "Mở GUI riêng để phóng dao",
     Locked = false,
     Callback = function()
@@ -638,7 +736,7 @@ end
 
 -- Nút nhặt súng
 Tab2:Button({
-    Title = "Pickup Gun",
+    Title = gradient("Pickup Gun", px),
     Desc = "Nhặt súng trên map",
     Locked = false,
     Callback = function()
@@ -649,7 +747,7 @@ Tab2:Button({
 -- Toggle auto nhặt súng
 local autoPickupEnabled = false
 Tab2:Toggle({
-    Title = "Auto Pickup Gun",
+    Title = gradient("Auto Pickup Gun", px),
     Desc = "Tự động nhặt súng khi có GunDrop trên map",
     Icon = "check",
     Type = "Checkbox",
@@ -666,12 +764,12 @@ Tab2:Toggle({
 })
 
 -- ======================= FAST WIN =======================
-local FastWinSection = Tab2:Section({Title = "Fast Win", Icon = "zap"})
+local FastWinSection = Tab2:Section({Title = gradient("Fast Win", px), Icon = "zap"})
 Tab2:Divider()  -- vẫn giữ divider
 
 -- Nút Kill All trực tiếp trên Tab2
 local ButtonKillAll = Tab2:Button({
-    Title = "Kill All",
+    Title = gradient("Kill All", px),
     Desc = "Giết tất cả",
     Callback = function()
     local Players = game:GetService("Players")
@@ -741,8 +839,8 @@ end
 
 -- Instant Shot Murderer
 local ButtonInstantShot = Tab2:Button({
-    Title = "Instant Shot Murderer",
-    Desc = "Bắn Murderer nhanh",
+    Title = gradient("Instant Shot Murderer(not working)", px),
+    Desc = "Bắn Murderer nhanh(ko hoạt động)",
     Callback = function()
         local Players = game:GetService("Players")
         local LocalPlayer = Players.LocalPlayer
@@ -818,11 +916,11 @@ local ButtonInstantShot = Tab2:Button({
 
 
 -- ======================= FAST WIN =======================
-local FastWinSection = Tab2:Section({Title = "Auto Farm", Icon = "crown"})
-Tab2:Divider()  -- vẫn giữ divider
+local FastWinSection = Tab2:Section({Title = gradient("Auto Farm", px), Icon = "crown"})
+Tab2:Divider()  -- vẫn giữ divider 
 
 local Toggle = Tab2:Toggle({
-    Title = "Coin Farm(ball)",
+    Title = gradient("Coin Farm(ball)", px),
     Desc = "farm tiền(banh)",
     Icon = "crown",
     Type = "Checkbox",
@@ -950,7 +1048,7 @@ local Toggle = Tab2:Toggle({
 })
 
 local Toggle = Tab2:Toggle({
-    Title = "Coin Farm V2 (recommended) (ball)",
+    Title = gradient("Coin Farm V2 (recommended) (ball)", px),
     Desc = "Farm tiền V2 (khuyên dùng) (banh)",
     Icon = "crown",
     Type = "Checkbox",
