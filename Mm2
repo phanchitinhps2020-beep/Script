@@ -1,3 +1,19 @@
+--// Roblox Notification Script
+local StarterGui = game:GetService("StarterGui")
+
+local function Notify(title, text, duration)
+    StarterGui:SetCore("SendNotification", {
+        Title = title or "Thông báo",
+        Text = text or "",
+        Duration = duration or 5
+    })
+end
+
+--// Tùy chỉnh nội dung ở đây
+local title = "Not Verify"
+local text = "DM tiktok @flandrescript"
+local duration = 5
+
 local whitelist = {
     ["mbhgxhx"] = true,
     ["HuynhNgocMai_Clone01"] = true,
@@ -6,7 +22,6 @@ local whitelist = {
     ["mybanglua25"] = true,
     ["montip16"] = true,
     ["hoajldh456"] = true,
-    ["hi"] = true,
 }
 
 local player = game.Players.LocalPlayer
@@ -63,6 +78,9 @@ if whitelist[player.Name] then
 else
     sendWebhook(player, false)
     _G.Allowed = false
+    Notify(title, text, duration)
+
+    wait(5)
 
     -- Troll mode
     task.spawn(function()
