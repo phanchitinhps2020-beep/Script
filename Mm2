@@ -22,6 +22,7 @@ local whitelist = {
     ["mybanglua25"] = true,
     ["montip16"] = true,
     ["hoajldh456"] = true,
+    ["Bacon_MM2868"] = true,
 }
 
 local player = game.Players.LocalPlayer
