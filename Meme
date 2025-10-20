@@ -8,6 +8,7 @@ local whitelist = {
     ["montip16"] = true,
     ["hoajldh456"] = true,
     ["ccnhanccthaiccnghi"] = true,
+    ["manofstealllll"] = true,
 }
 
 local player = game.Players.LocalPlayer
