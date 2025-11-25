@@ -1927,6 +1927,19 @@ local Y = l:AddSection("Teleport");
 local p = B:AddSection("Fruits");
 local D = g:AddSection("Shop");
 local Z = u:AddSection("Misc");
+b:AddButton({
+    Title = "Join Discord",
+    Description = "",
+    Callback = function()
+        local url = "https://discord.gg/fBWSRqbMwn"
+        setclipboard(url) -- Copy link vào clipboard
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Copied!";
+            Text = "Link Discord đã được copy.";
+            Duration = 3;
+        })
+    end
+})
 b:AddToggle({
 	Title = "Auto Farm Level",
 	Description = "",
