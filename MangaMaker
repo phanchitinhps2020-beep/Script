@@ -73,7 +73,6 @@ function MangaMaker:CreateWindow(title)
     window._images = {}
     window._count = 0
 
-    -- Hàm thêm ảnh
     function window:AddImage(link)
         local final = link
         if link:find("http") then
@@ -91,42 +90,44 @@ function MangaMaker:CreateWindow(title)
         local frame = Instance.new("Frame", scroll)
         frame.BackgroundTransparency = 1
 
+        -- Chiều ngang = 80% chiều cao GUI
         local guiHeight = main.AbsoluteSize.Y
-        local imgWidth = guiHeight * 0.8 -- chiều ngang = 80% GUI
-        frame.Size = UDim2.new(0,imgWidth,0,100) -- tạm height = 100px
+        local imgWidth = guiHeight * 0.8
 
         local img = Instance.new("ImageLabel", frame)
         img.Image = final
         img.BackgroundTransparency = 1
         img.Size = UDim2.new(1,0,1,0)
         img.ScaleType = Enum.ScaleType.Fit
-        img.Rotation = 0 -- giữ bình thường, ngang = width 80% GUI
+        img.Rotation = -90
 
         table.insert(window._images, frame)
         window._count += 1
 
-        -- Update height theo tỉ lệ gốc
         local function UpdateFrame()
-            local w,h = img.ImageRectSize.X,img.ImageRectSize.Y
-            local ratio = 1
-            if w > 0 and h > 0 then
-                ratio = h / w
-            end
-            frame.Size = UDim2.new(0,imgWidth,0,imgWidth * ratio)
+            local conn
+            conn = img:GetPropertyChangedSignal("ImageRectSize"):Connect(function()
+                local w,h = img.ImageRectSize.X,img.ImageRectSize.Y
+                if w > 0 and h > 0 then
+                    local ratio = h / w
+                    local newWidth = imgWidth
+                    local newHeight = newWidth * ratio
+                    frame.Size = UDim2.new(0,newWidth,0,newHeight)
 
-            local totalWidth = 0
-            for _,f in pairs(window._images) do
-                totalWidth = totalWidth + f.AbsoluteSize.X
-            end
-            totalWidth = totalWidth + layout.Padding.Offset * (window._count - 1)
-            scroll.CanvasSize = UDim2.new(0,totalWidth,0,scroll.AbsoluteSize.Y)
+                    -- Cập nhật CanvasSize
+                    local totalWidth = 0
+                    for _,f in pairs(window._images) do
+                        totalWidth = totalWidth + f.AbsoluteSize.X
+                    end
+                    totalWidth = totalWidth + layout.Padding.Offset * (window._count - 1)
+                    scroll.CanvasSize = UDim2.new(0,totalWidth,0,scroll.AbsoluteSize.Y)
+
+                    conn:Disconnect()
+                end
+            end)
         end
 
-        img:GetPropertyChangedSignal("Image"):Connect(function()
-            task.defer(UpdateFrame)
-        end)
         task.defer(UpdateFrame)
-
         return img
     end
 
