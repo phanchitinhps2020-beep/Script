@@ -63,7 +63,7 @@ function MangaMaker:CreateWindow(title)
 
     local layout = Instance.new("UIListLayout", scroll)
     layout.FillDirection = Enum.FillDirection.Horizontal
-    layout.Padding = UDim.new(0,10) -- khoảng cách 10px
+    layout.Padding = UDim.new(0,10)
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
     layout.VerticalAlignment = Enum.VerticalAlignment.Center
     layout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -90,44 +90,53 @@ function MangaMaker:CreateWindow(title)
         local frame = Instance.new("Frame", scroll)
         frame.BackgroundTransparency = 1
 
-        -- Chiều ngang = 80% chiều cao GUI
+        -- Chiều ngang = 80% GUI
         local guiHeight = main.AbsoluteSize.Y
         local imgWidth = guiHeight * 0.8
+        frame.Size = UDim2.new(0,imgWidth,0,imgWidth) -- tạm height = width
 
         local img = Instance.new("ImageLabel", frame)
         img.Image = final
         img.BackgroundTransparency = 1
         img.Size = UDim2.new(1,0,1,0)
         img.ScaleType = Enum.ScaleType.Fit
-        img.Rotation = -90
+        img.Rotation = -90 -- xoay ngang đúng chiều
 
         table.insert(window._images, frame)
         window._count += 1
 
-        local function UpdateFrame()
-            local conn
-            conn = img:GetPropertyChangedSignal("ImageRectSize"):Connect(function()
+        local function UpdateCanvas()
+            local totalWidth = 0
+            for _,f in pairs(window._images) do
+                totalWidth = totalWidth + f.AbsoluteSize.X
+            end
+            totalWidth = totalWidth + layout.Padding.Offset * (#window._images - 1)
+            scroll.CanvasSize = UDim2.new(0,totalWidth,0,scroll.AbsoluteSize.Y)
+        end
+
+        -- Update frame size sau khi ảnh load xong
+        img:GetPropertyChangedSignal("Image"):Connect(function()
+            task.defer(function()
                 local w,h = img.ImageRectSize.X,img.ImageRectSize.Y
                 if w > 0 and h > 0 then
                     local ratio = h / w
-                    local newWidth = imgWidth
-                    local newHeight = newWidth * ratio
-                    frame.Size = UDim2.new(0,newWidth,0,newHeight)
-
-                    -- Cập nhật CanvasSize
-                    local totalWidth = 0
-                    for _,f in pairs(window._images) do
-                        totalWidth = totalWidth + f.AbsoluteSize.X
-                    end
-                    totalWidth = totalWidth + layout.Padding.Offset * (window._count - 1)
-                    scroll.CanvasSize = UDim2.new(0,totalWidth,0,scroll.AbsoluteSize.Y)
-
-                    conn:Disconnect()
+                    frame.Size = UDim2.new(0,imgWidth,0,imgWidth * ratio)
+                    UpdateCanvas()
                 end
             end)
-        end
+        end)
 
-        task.defer(UpdateFrame)
+        -- Force update ngay, ảnh lớn + scroll bar xuất hiện
+        task.defer(function()
+            local w,h = img.ImageRectSize.X,img.ImageRectSize.Y
+            local ratio = 1
+            if w > 0 and h > 0 then
+                ratio = h / w
+            end
+            frame.Size = UDim2.new(0,imgWidth,0,imgWidth * ratio)
+            UpdateCanvas()
+        end)
+
         return img
     end
 
