@@ -92,7 +92,7 @@ function MangaMaker:CreateWindow(title)
 
         -- Chiều ngang = 80% GUI
         local guiHeight = main.AbsoluteSize.Y
-        local imgWidth = guiHeight * 0.9
+        local imgWidth = guiHeight * 1
         frame.Size = UDim2.new(0,imgWidth,0,imgWidth) -- tạm height = width
 
         local img = Instance.new("ImageLabel", frame)
