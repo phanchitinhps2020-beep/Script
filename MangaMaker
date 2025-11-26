@@ -32,7 +32,7 @@ function MangaMaker:CreateWindow(title)
     label.Position = UDim2.new(0,10,0,10)
     label.BackgroundTransparency = 1
     label.Text = title or "Manga"
-    label.TextColor3 = Color3.new(1,1,1)
+    label.TextColor3 = Color3.new(0,0,0)
     label.TextScaled = true
     label.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -44,7 +44,7 @@ function MangaMaker:CreateWindow(title)
     close.AnchorPoint = Vector2.new(1,0)
     close.Text = "X"
     close.BackgroundColor3 = Color3.fromRGB(200,0,0)
-    close.TextColor3 = Color3.new(1,1,1)
+    close.TextColor3 = Color3.new(0,0,0)
     close.MouseButton1Click:Connect(function()
         screenGui:Destroy()
     end)
@@ -92,7 +92,7 @@ function MangaMaker:CreateWindow(title)
 
         -- Chiều ngang = 80% GUI
         local guiHeight = main.AbsoluteSize.Y
-        local imgWidth = guiHeight * 1
+        local imgWidth = guiHeight * 1.5
         frame.Size = UDim2.new(0,imgWidth,0,imgWidth) -- tạm height = width
 
         local img = Instance.new("ImageLabel", frame)
