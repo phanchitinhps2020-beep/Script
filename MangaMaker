@@ -7,35 +7,32 @@ local getasset = getcustomasset or getsynasset
 local MangaMaker = {}
 MangaMaker.Windows = {}
 
+-- Hàm tạo window với AutoScale
 function MangaMaker:CreateWindow(title)
-    title = title or "MangaWindow"
-
-    -- Lấy size màn hình
-    local screenX = workspace.CurrentCamera.ViewportSize.X
-    local screenY = workspace.CurrentCamera.ViewportSize.Y
-
-    -- Chiều dọc mặc định
-    local guiHeight = screenY*0.8
-    local guiWidth = guiHeight*0.6  -- dọc = chiều cao lớn, chiều ngang nhỏ hơn
-
     local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = title
+    screenGui.Name = title or "MangaWindow"
     screenGui.Parent = playerGui
     screenGui.ResetOnSpawn = false
 
+    -- Mặc định dọc
+    local orientation = "Vertical" 
+
     local main = Instance.new("Frame")
     main.Parent = screenGui
-    main.Size = UDim2.new(0, guiWidth, 0, guiHeight)
-    main.Position = UDim2.new(0.5, -guiWidth/2, 0.5, -guiHeight/2)
+    main.AnchorPoint = Vector2.new(0.5,0.5)
+    main.Position = UDim2.new(0.5,0,0.5,0)
+    main.Size = UDim2.new(0.5,0,0.7,0)
     main.BackgroundColor3 = Color3.fromRGB(60,60,60)
     main.BackgroundTransparency = 0.5
     main.Active = true
+    main.ClipsDescendants = true
     main.Draggable = true
 
-    -- Nút X đóng
+    -- Nút đóng
     local close = Instance.new("TextButton", main)
-    close.Size = UDim2.new(0,25,0,25)
-    close.Position = UDim2.new(1,-30,0,5)
+    close.Size = UDim2.new(0.05,0,0.05,0)
+    close.Position = UDim2.new(0.95,0,0,0)
+    close.AnchorPoint = Vector2.new(1,0)
     close.Text = "X"
     close.BackgroundColor3 = Color3.fromRGB(200,0,0)
     close.TextColor3 = Color3.new(1,1,1)
@@ -43,40 +40,40 @@ function MangaMaker:CreateWindow(title)
         screenGui:Destroy()
     end)
 
-    -- Nút <> đổi chiều
-    local rotate = Instance.new("TextButton", main)
-    rotate.Size = UDim2.new(0,25,0,25)
-    rotate.Position = UDim2.new(1,-30,0,35)
-    rotate.Text = "<>"
-    rotate.BackgroundColor3 = Color3.fromRGB(0,150,255)
-    rotate.TextColor3 = Color3.new(1,1,1)
-
-    -- Scroll frame
+    -- ScrollFrame
     local scroll = Instance.new("ScrollingFrame", main)
-    scroll.Size = UDim2.new(0.95,0,0.88,0)
-    scroll.Position = UDim2.new(0.025,0,0.1,0)
+    scroll.AnchorPoint = Vector2.new(0.5,0)
+    scroll.Position = UDim2.new(0.5,0,0.05,0)
+    scroll.Size = UDim2.new(0.95,0,0.9,0)
     scroll.ScrollBarThickness = 6
     scroll.BackgroundTransparency = 1
     scroll.CanvasSize = UDim2.new(0,0,0,0)
-
+    
     local layout = Instance.new("UIListLayout", scroll)
     layout.Padding = UDim.new(0,5)
+    layout.FillDirection = Enum.FillDirection.Vertical
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+    -- Nút đổi hướng
+    local rotate = Instance.new("TextButton", main)
+    rotate.Size = UDim2.new(0.05,0,0.05,0)
+    rotate.Position = UDim2.new(0.9,0,0,0)
+    rotate.Text = "<>"
+    rotate.TextColor3 = Color3.new(1,1,1)
+    rotate.BackgroundColor3 = Color3.fromRGB(0,150,0)
 
     local window = {}
     window.Scroll = scroll
     window._count = 0
-    window._height = 200
-    window._main = main
-    window._isVertical = true
+    window._orientation = orientation
 
-    -- AddImage
+    -- Function add image
     function window:AddImage(link)
         local final = link
         if link:find("http") then
-            if not req then return warn("Executor không hỗ trợ request") end
+            if not req then warn("Executor không hỗ trợ request") return end
             local file = "Manga_"..os.time().."_"..math.random(9999)..".png"
-            local d = req({Url=link, Method="GET"})
+            local d = req({Url=link,Method="GET"})
             if d.StatusCode == 200 then
                 writefile(file,d.Body)
                 final = getasset(file)
@@ -85,8 +82,8 @@ function MangaMaker:CreateWindow(title)
             end
         end
 
-        local frame = Instance.new("Frame",scroll)
-        frame.Size = UDim2.new(0.8,0,0,window._height)
+        local frame = Instance.new("Frame", scroll)
+        frame.Size = UDim2.new(0.9,0,0,0.2) -- 20% height dọc (sẽ scale tự động)
         frame.BackgroundTransparency = 1
 
         local img = Instance.new("ImageLabel", frame)
@@ -96,24 +93,33 @@ function MangaMaker:CreateWindow(title)
         img.Image = final
 
         window._count += 1
-        scroll.CanvasSize = UDim2.new(0,0,0,window._count*(window._height+5))
+        -- AutoScale canvas theo orientation
+        if window._orientation == "Vertical" then
+            scroll.CanvasSize = UDim2.new(0,0,0.2*window._count + 0.01,0)
+            layout.FillDirection = Enum.FillDirection.Vertical
+        else
+            scroll.CanvasSize = UDim2.new(0.25*window._count + 0.01,0,0,0)
+            layout.FillDirection = Enum.FillDirection.Horizontal
+        end
+
         return img
     end
 
-    -- Click nút <> để thay đổi chiều
+    -- Xử lý xoay hướng
     rotate.MouseButton1Click:Connect(function()
-        local screenX = workspace.CurrentCamera.ViewportSize.X
-        local screenY = workspace.CurrentCamera.ViewportSize.Y
-        if window._isVertical then
-            -- chuyển sang ngang (full width, nhỏ height)
-            window._main.Size = UDim2.new(0, screenX*0.8, 0, screenY*0.5)
-            window._main.Position = UDim2.new(0.5, -screenX*0.4, 0.5, -screenY*0.25)
+        if window._orientation == "Vertical" then
+            window._orientation = "Horizontal"
+            layout.FillDirection = Enum.FillDirection.Horizontal
         else
-            -- chuyển về dọc
-            window._main.Size = UDim2.new(0, screenY*0.6, 0, screenY*0.8)
-            window._main.Position = UDim2.new(0.5, -screenY*0.3, 0.5, -screenY*0.4)
+            window._orientation = "Vertical"
+            layout.FillDirection = Enum.FillDirection.Vertical
         end
-        window._isVertical = not window._isVertical
+        -- Cập nhật lại CanvasSize
+        if window._orientation == "Vertical" then
+            scroll.CanvasSize = UDim2.new(0,0,0.2*window._count + 0.01,0)
+        else
+            scroll.CanvasSize = UDim2.new(0.25*window._count + 0.01,0,0,0)
+        end
     end)
 
     table.insert(self.Windows, window)
