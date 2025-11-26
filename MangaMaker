@@ -7,31 +7,40 @@ local getasset = getcustomasset or getsynasset
 local MangaMaker = {}
 MangaMaker.Windows = {}
 
--- Hàm tạo window với AutoScale
 function MangaMaker:CreateWindow(title)
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = title or "MangaWindow"
     screenGui.Parent = playerGui
     screenGui.ResetOnSpawn = false
 
-    -- Mặc định dọc
-    local orientation = "Vertical" 
-
+    -- Main frame full screen
     local main = Instance.new("Frame")
     main.Parent = screenGui
     main.AnchorPoint = Vector2.new(0.5,0.5)
     main.Position = UDim2.new(0.5,0,0.5,0)
-    main.Size = UDim2.new(0.5,0,0.7,0)
+    main.Size = UDim2.new(1,0,1,0)
     main.BackgroundColor3 = Color3.fromRGB(60,60,60)
     main.BackgroundTransparency = 0.5
-    main.Active = true
     main.ClipsDescendants = true
-    main.Draggable = true
+    main.Active = true
+    main.Draggable = false
 
-    -- Nút đóng
+    -- Tên window góc trái, ZIndex = 2
+    local label = Instance.new("TextLabel", main)
+    label.ZIndex = 2
+    label.Size = UDim2.new(0.2,0,0.05,0)
+    label.Position = UDim2.new(0,10,0,10)
+    label.BackgroundTransparency = 1
+    label.Text = title or "Manga"
+    label.TextColor3 = Color3.new(1,1,1)
+    label.TextScaled = true
+    label.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Nút X góc phải, ZIndex = 2
     local close = Instance.new("TextButton", main)
+    close.ZIndex = 2
     close.Size = UDim2.new(0.05,0,0.05,0)
-    close.Position = UDim2.new(0.95,0,0,0)
+    close.Position = UDim2.new(1,-10,0,10)
     close.AnchorPoint = Vector2.new(1,0)
     close.Text = "X"
     close.BackgroundColor3 = Color3.fromRGB(200,0,0)
@@ -40,40 +49,37 @@ function MangaMaker:CreateWindow(title)
         screenGui:Destroy()
     end)
 
-    -- ScrollFrame
+    -- ScrollFrame ngang
     local scroll = Instance.new("ScrollingFrame", main)
-    scroll.AnchorPoint = Vector2.new(0.5,0)
-    scroll.Position = UDim2.new(0.5,0,0.05,0)
-    scroll.Size = UDim2.new(0.95,0,0.9,0)
-    scroll.ScrollBarThickness = 6
+    scroll.AnchorPoint = Vector2.new(0,0)
+    scroll.Position = UDim2.new(0,0,0,0)
+    scroll.Size = UDim2.new(1,0,1,0)
     scroll.BackgroundTransparency = 1
+    scroll.ScrollBarThickness = 10
     scroll.CanvasSize = UDim2.new(0,0,0,0)
-    
-    local layout = Instance.new("UIListLayout", scroll)
-    layout.Padding = UDim.new(0,5)
-    layout.FillDirection = Enum.FillDirection.Vertical
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    scroll.HorizontalScrollBarInset = Enum.ScrollBarInset.Always
+    scroll.VerticalScrollBarInset = Enum.ScrollBarInset.None
+    scroll.ClipsDescendants = true
 
-    -- Nút đổi hướng
-    local rotate = Instance.new("TextButton", main)
-    rotate.Size = UDim2.new(0.05,0,0.05,0)
-    rotate.Position = UDim2.new(0.9,0,0,0)
-    rotate.Text = "<>"
-    rotate.TextColor3 = Color3.new(1,1,1)
-    rotate.BackgroundColor3 = Color3.fromRGB(0,150,0)
+    local layout = Instance.new("UIListLayout", scroll)
+    layout.FillDirection = Enum.FillDirection.Horizontal
+    layout.Padding = UDim.new(0,10) -- khoảng cách 10px
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    layout.VerticalAlignment = Enum.VerticalAlignment.Center
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
 
     local window = {}
     window.Scroll = scroll
+    window._images = {}
     window._count = 0
-    window._orientation = orientation
 
-    -- Function add image
+    -- Hàm thêm ảnh
     function window:AddImage(link)
         local final = link
         if link:find("http") then
             if not req then warn("Executor không hỗ trợ request") return end
             local file = "Manga_"..os.time().."_"..math.random(9999)..".png"
-            local d = req({Url=link,Method="GET"})
+            local d = req({Url=link, Method="GET"})
             if d.StatusCode == 200 then
                 writefile(file,d.Body)
                 final = getasset(file)
@@ -83,44 +89,58 @@ function MangaMaker:CreateWindow(title)
         end
 
         local frame = Instance.new("Frame", scroll)
-        frame.Size = UDim2.new(0.9,0,0,0.2) -- 20% height dọc (sẽ scale tự động)
         frame.BackgroundTransparency = 1
 
-        local img = Instance.new("ImageLabel", frame)
-        img.Size = UDim2.new(1,0,1,0)
-        img.BackgroundTransparency = 1
-        img.ScaleType = Enum.ScaleType.Fit
-        img.Image = final
+        -- chiều ngang ảnh = 80% GUI, chiều cao theo tỉ lệ gốc
+        local guiHeight = main.AbsoluteSize.Y
+        local imgWidth = guiHeight * 0.8
+        frame.Size = UDim2.new(0,imgWidth,0,100) -- tạm height = 100, sẽ update theo ratio
 
+        local img = Instance.new("ImageLabel", frame)
+        img.Image = final
+        img.BackgroundTransparency = 1
+        img.Size = UDim2.new(1,0,1,0)
+        img.ScaleType = Enum.ScaleType.Fit
+
+        table.insert(window._images, frame)
         window._count += 1
-        -- AutoScale canvas theo orientation
-        if window._orientation == "Vertical" then
-            scroll.CanvasSize = UDim2.new(0,0,0.2*window._count + 0.01,0)
-            layout.FillDirection = Enum.FillDirection.Vertical
-        else
-            scroll.CanvasSize = UDim2.new(0.25*window._count + 0.01,0,0,0)
-            layout.FillDirection = Enum.FillDirection.Horizontal
-        end
+
+        -- Update height theo tỉ lệ ảnh (chiều ngang = 80% GUI)
+        img:GetPropertyChangedSignal("Image"):Connect(function()
+            task.defer(function()
+                local ratio = 1
+                if img.ImageRectSize.X > 0 then
+                    ratio = img.ImageRectSize.Y / img.ImageRectSize.X -- đổi ratio chiều dọc theo chiều ngang
+                end
+                frame.Size = UDim2.new(0,imgWidth,0,imgWidth * ratio)
+
+                -- Update CanvasSize tổng width
+                local totalWidth = 0
+                for _,f in pairs(window._images) do
+                    totalWidth = totalWidth + f.AbsoluteSize.X
+                end
+                totalWidth = totalWidth + layout.Padding.Offset * (window._count - 1)
+                scroll.CanvasSize = UDim2.new(0,totalWidth,0,scroll.AbsoluteSize.Y)
+            end)
+        end)
+
+        -- Force update ngay
+        task.defer(function()
+            local ratio = 1
+            if img.ImageRectSize.X > 0 then
+                ratio = img.ImageRectSize.Y / img.ImageRectSize.X
+            end
+            frame.Size = UDim2.new(0,imgWidth,0,imgWidth * ratio)
+            local totalWidth = 0
+            for _,f in pairs(window._images) do
+                totalWidth = totalWidth + f.AbsoluteSize.X
+            end
+            totalWidth = totalWidth + layout.Padding.Offset * (window._count - 1)
+            scroll.CanvasSize = UDim2.new(0,totalWidth,0,scroll.AbsoluteSize.Y)
+        end)
 
         return img
     end
-
-    -- Xử lý xoay hướng
-    rotate.MouseButton1Click:Connect(function()
-        if window._orientation == "Vertical" then
-            window._orientation = "Horizontal"
-            layout.FillDirection = Enum.FillDirection.Horizontal
-        else
-            window._orientation = "Vertical"
-            layout.FillDirection = Enum.FillDirection.Vertical
-        end
-        -- Cập nhật lại CanvasSize
-        if window._orientation == "Vertical" then
-            scroll.CanvasSize = UDim2.new(0,0,0.2*window._count + 0.01,0)
-        else
-            scroll.CanvasSize = UDim2.new(0.25*window._count + 0.01,0,0,0)
-        end
-    end)
 
     table.insert(self.Windows, window)
     return window
