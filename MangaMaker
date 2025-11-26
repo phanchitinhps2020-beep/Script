@@ -1,94 +1,88 @@
--- MangaMaker UI Library mới
-return function()
-    local player = game.Players.LocalPlayer
-    local playerGui = player:WaitForChild("PlayerGui")
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
-    local req = request or http_request or (syn and syn.request)
-    local getasset = getcustomasset or getsynasset
+local req = request or http_request or (syn and syn.request)
+local getasset = getcustomasset or getsynasset
 
-    local Library = {}
-    Library.Windows = {}
+local MangaMaker = {}
+MangaMaker.Windows = {}
 
-    -- Hàm tạo window mới
-    function Library:CreateWindow(title, width, height)
-        width = width or 400
-        height = height or 500
+function MangaMaker:CreateWindow(title, width, height)
+    width = width or 400
+    height = height or 500
 
-        local screenGui = Instance.new("ScreenGui")
-        screenGui.Name = title or "MangaWindow"
-        screenGui.Parent = playerGui
-        screenGui.ResetOnSpawn = false
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = title or "MangaWindow"
+    screenGui.Parent = playerGui
+    screenGui.ResetOnSpawn = false
 
-        local main = Instance.new("Frame")
-        main.Parent = screenGui
-        main.Size = UDim2.new(0, width, 0, height)
-        main.Position = UDim2.new(0.5, -width/2, 0.5, -height/2)
-        main.BackgroundColor3 = Color3.fromRGB(60,60,60)
-        main.BackgroundTransparency = 0.5
-        main.Active = true
-        main.Draggable = true
+    local main = Instance.new("Frame")
+    main.Parent = screenGui
+    main.Size = UDim2.new(0, width, 0, height)
+    main.Position = UDim2.new(0.5, -width/2, 0.5, -height/2)
+    main.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    main.BackgroundTransparency = 0.5
+    main.Active = true
+    main.Draggable = true
 
-        local close = Instance.new("TextButton", main)
-        close.Size = UDim2.new(0,25,0,25)
-        close.Position = UDim2.new(1,-30,0,5)
-        close.Text = "X"
-        close.BackgroundColor3 = Color3.fromRGB(200,0,0)
-        close.TextColor3 = Color3.new(1,1,1)
-        close.MouseButton1Click:Connect(function()
-            screenGui:Destroy()
-        end)
+    local close = Instance.new("TextButton", main)
+    close.Size = UDim2.new(0,25,0,25)
+    close.Position = UDim2.new(1,-30,0,5)
+    close.Text = "X"
+    close.BackgroundColor3 = Color3.fromRGB(200,0,0)
+    close.TextColor3 = Color3.new(1,1,1)
+    close.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
 
-        local scroll = Instance.new("ScrollingFrame", main)
-        scroll.Size = UDim2.new(0.95,0,0.88,0)
-        scroll.Position = UDim2.new(0.025,0,0.1,0)
-        scroll.ScrollBarThickness = 6
-        scroll.BackgroundTransparency = 1
-        scroll.CanvasSize = UDim2.new(0,0,0,0)
+    local scroll = Instance.new("ScrollingFrame", main)
+    scroll.Size = UDim2.new(0.95,0,0.88,0)
+    scroll.Position = UDim2.new(0.025,0,0.1,0)
+    scroll.ScrollBarThickness = 6
+    scroll.BackgroundTransparency = 1
+    scroll.CanvasSize = UDim2.new(0,0,0,0)
 
-        local layout = Instance.new("UIListLayout", scroll)
-        layout.Padding = UDim.new(0,5)
-        layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    local layout = Instance.new("UIListLayout", scroll)
+    layout.Padding = UDim.new(0,5)
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-        local window = {}
-        window.Scroll = scroll
-        window._count = 0
-        window._height = 200
+    local window = {}
+    window.Scroll = scroll
+    window._count = 0
+    window._height = 200
 
-        -- AddImage (rbxassetid hoặc link GitHub)
-        function window:AddImage(link)
-            local final = link
-
-            if link:find("http") then
-                if not req then return warn("Executor không hỗ trợ request") end
-                local file = "Manga_"..os.time().."_"..math.random(9999)..".png"
-                local d = req({Url=link, Method="GET"})
-                if d.StatusCode == 200 then
-                    writefile(file,d.Body)
-                    final = getasset(file)
-                else
-                    warn("Không tải được link:", link)
-                end
+    function window:AddImage(link)
+        local final = link
+        if link:find("http") then
+            if not req then return warn("Executor không hỗ trợ request") end
+            local file = "Manga_"..os.time().."_"..math.random(9999)..".png"
+            local d = req({Url=link, Method="GET"})
+            if d.StatusCode == 200 then
+                writefile(file,d.Body)
+                final = getasset(file)
+            else
+                warn("Không tải được link:", link)
             end
-
-            local frame = Instance.new("Frame",scroll)
-            frame.Size = UDim2.new(0.8,0,0,window._height)
-            frame.BackgroundTransparency = 1
-
-            local img = Instance.new("ImageLabel", frame)
-            img.Size = UDim2.new(1,0,1,0)
-            img.BackgroundTransparency = 1
-            img.ScaleType = Enum.ScaleType.Fit
-            img.Image = final
-
-            window._count += 1
-            scroll.CanvasSize = UDim2.new(0,0,0,window._count*(window._height+5))
-
-            return img
         end
 
-        table.insert(self.Windows, window)
-        return window
+        local frame = Instance.new("Frame",scroll)
+        frame.Size = UDim2.new(0.8,0,0,window._height)
+        frame.BackgroundTransparency = 1
+
+        local img = Instance.new("ImageLabel", frame)
+        img.Size = UDim2.new(1,0,1,0)
+        img.BackgroundTransparency = 1
+        img.ScaleType = Enum.ScaleType.Fit
+        img.Image = final
+
+        window._count += 1
+        scroll.CanvasSize = UDim2.new(0,0,0,window._count*(window._height+5))
+
+        return img
     end
 
-    return Library
+    table.insert(self.Windows, window)
+    return window
 end
+
+return MangaMaker
