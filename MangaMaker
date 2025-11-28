@@ -3,7 +3,6 @@ local playerGui = player:WaitForChild("PlayerGui")
 
 local req = request or http_request or (syn and syn.request)
 local getasset = getcustomasset or getsynasset
-local isfile = isfile or function(file) return pcall(function() readfile(file) end) end
 
 local MangaMaker = {}
 MangaMaker.Windows = {}
@@ -77,18 +76,14 @@ function MangaMaker:CreateWindow(title)
     function window:AddImage(link)
         local final = link
         if link:find("http") then
-            local filename = "Manga_"..link:match("([^/]+)$")
-            if isfile(filename) then
-                final = getasset(filename)
+            if not req then warn("Executor không hỗ trợ request") return end
+            local file = "Manga_"..os.time().."_"..math.random(9999)..".png"
+            local d = req({Url=link, Method="GET"})
+            if d.StatusCode == 200 then
+                writefile(file,d.Body)
+                final = getasset(file)
             else
-                if not req then warn("Executor không hỗ trợ request") return end
-                local d = req({Url=link, Method="GET"})
-                if d.StatusCode == 200 then
-                    writefile(filename, d.Body)
-                    final = getasset(filename)
-                else
-                    warn("Không tải được link:", link)
-                end
+                warn("Không tải được link:", link)
             end
         end
 
@@ -119,6 +114,7 @@ function MangaMaker:CreateWindow(title)
             scroll.CanvasSize = UDim2.new(0,totalWidth,0,scroll.AbsoluteSize.Y)
         end
 
+        -- Update frame size sau khi ảnh load xong
         img:GetPropertyChangedSignal("Image"):Connect(function()
             task.defer(function()
                 local w,h = img.ImageRectSize.X,img.ImageRectSize.Y
@@ -130,6 +126,7 @@ function MangaMaker:CreateWindow(title)
             end)
         end)
 
+        -- Force update ngay, ảnh lớn + scroll bar xuất hiện
         task.defer(function()
             local w,h = img.ImageRectSize.X,img.ImageRectSize.Y
             local ratio = 1
