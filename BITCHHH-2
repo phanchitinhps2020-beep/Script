@@ -1,0 +1,83 @@
+--// SERVICES
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local lp = Players.LocalPlayer
+if not lp then return end
+
+--// TARGET PATH
+local function getMangoStar()
+    local gui = lp:FindFirstChild("PlayerGui")
+    if not gui then return end
+
+    local popup = gui:FindFirstChild("Popup")
+    if not popup then return end
+
+    return popup:FindFirstChild("MangoStar")
+end
+
+--// FORCE FUNCTION
+local function forceGui(obj)
+    if not obj then return end
+    if not obj:IsA("GuiObject") then return end
+
+    -- Center screen
+    obj.AnchorPoint = Vector2.new(0.5, 0.5)
+    obj.Position = UDim2.fromScale(0.5, 0.5)
+
+    -- Force visible
+    obj.Visible = true
+end
+
+--// PROPERTY LOCK
+local connections = {}
+
+local function lockProperties(obj)
+    -- Clear old
+    for _,c in pairs(connections) do
+        c:Disconnect()
+    end
+    table.clear(connections)
+
+    -- Lock visible
+    table.insert(connections,
+        obj:GetPropertyChangedSignal("Visible"):Connect(function()
+            if not obj.Visible then
+                obj.Visible = true
+            end
+        end)
+    )
+
+    -- Lock position
+    table.insert(connections,
+        obj:GetPropertyChangedSignal("Position"):Connect(function()
+            obj.Position = UDim2.fromScale(0.5, 0.5)
+        end)
+    )
+
+    -- Lock anchor
+    table.insert(connections,
+        obj:GetPropertyChangedSignal("AnchorPoint"):Connect(function()
+            obj.AnchorPoint = Vector2.new(0.5, 0.5)
+        end)
+    )
+end
+
+--// MAIN LOOP (NO LAG)
+local current
+
+RunService.Heartbeat:Connect(function()
+    local obj = getMangoStar()
+    if not obj then return end
+
+    if obj ~= current then
+        current = obj
+        forceGui(obj)
+        lockProperties(obj)
+    end
+
+    -- Safety force (in case script sets same value without event)
+    if not obj.Visible then
+        obj.Visible = true
+    end
+end)
