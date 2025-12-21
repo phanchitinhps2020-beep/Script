@@ -1,0 +1,209 @@
+--// ================= GLOBAL =================
+getgenv().G = true
+getgenv().Creator = 'https://discord.gg/B3HqPPzFYr - HalloweenGaster'
+getgenv().KillAura = false
+getgenv().KillRadius = 20
+getgenv().KillDelay = 0.4
+
+--// ================= SERVICES =================
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local lp = Players.LocalPlayer
+if not lp then return end
+
+--// ================= SIMULATION CONTROL =================
+local simEnabled = false
+
+local function enableSimulation()
+    if simEnabled then return end
+    simEnabled = true
+    pcall(function()
+        if sethiddenproperty then
+            sethiddenproperty(lp, "SimulationRadius", math.huge)
+            sethiddenproperty(lp, "MaxSimulationRadius", math.huge)
+        end
+    end)
+end
+
+local function disableSimulation()
+    if not simEnabled then return end
+    simEnabled = false
+    pcall(function()
+        if sethiddenproperty then
+            sethiddenproperty(lp, "SimulationRadius", 0)
+            sethiddenproperty(lp, "MaxSimulationRadius", 0)
+        end
+    end)
+end
+
+--// ================= UTILS =================
+local function getRadius()
+    return math.clamp(tonumber(getgenv().KillRadius) or 5, 1, 100)
+end
+
+--// ================= AURA BALL =================
+local aura, auraConn
+
+local function spawnAura()
+    if aura then return end
+    aura = Instance.new("Part")
+    aura.Name = "KillAuraBall"
+    aura.Shape = Enum.PartType.Ball
+    aura.Anchored = true
+    aura.CanCollide = false
+    aura.Material = Enum.Material.ForceField
+    aura.Color = Color3.new(1,1,1)
+    aura.Transparency = 0
+    aura.Parent = workspace
+
+    auraConn = RunService.RenderStepped:Connect(function()
+        if not getgenv().KillAura then return end
+        local char = lp.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if aura and hrp then
+            local r = getRadius()
+            aura.CFrame = hrp.CFrame
+            aura.Size = Vector3.new(r*2, r*2, r*2)
+        end
+    end)
+end
+
+local function despawnAura()
+    if auraConn then auraConn:Disconnect() auraConn = nil end
+    if aura then aura:Destroy() aura = nil end
+end
+
+--// ================= KILL LOOP (NO IDLE LAG) =================
+task.spawn(function()
+    while getgenv().G and getgenv().Creator == 'https://discord.gg/B3HqPPzFYr - HalloweenGaster' do
+
+        if not getgenv().KillAura then
+            despawnAura()
+            disableSimulation()
+            task.wait(0.6)
+            continue
+        end
+
+        enableSimulation()
+        spawnAura()
+        task.wait(getgenv().KillDelay)
+
+        local char = lp.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if not hrp then continue end
+
+        local radius = getRadius()
+        local pos = hrp.Position
+        local r2 = radius * radius
+
+        for _,hum in ipairs(workspace:GetDescendants()) do
+            if hum:IsA("Humanoid") and hum.Health > 0 then
+                local model = hum.Parent
+                if model and model ~= char and not Players:GetPlayerFromCharacter(model) then
+                    local root = model:FindFirstChild("HumanoidRootPart")
+                    if root then
+                        local d = root.Position - pos
+                        if (d.X*d.X + d.Y*d.Y + d.Z*d.Z) <= r2 then
+                            pcall(function()
+                                root.AssemblyLinearVelocity = Vector3.zero
+                                root.CFrame = root.CFrame
+                            end)
+                            pcall(function()
+                                hum:TakeDamage(hum.MaxHealth)
+                                hum.Health = 0
+                            end)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+--// ================= GUI =================
+local gui = Instance.new("ScreenGui", lp.PlayerGui)
+gui.Name = "KillAuraGUI"
+gui.ResetOnSpawn = false
+
+-- 🔥 AUTO DPI SCALE
+local uiScale = Instance.new("UIScale", gui)
+uiScale.Scale = 0.8
+
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0, 260, 0, 175)
+main.Position = UDim2.new(0.5, -130, 0.4, 0)
+main.BackgroundColor3 = Color3.fromRGB(25,25,25)
+main.Active = true
+main.Draggable = true
+main.BorderSizePixel = 0
+
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1, -40, 0, 30)
+title.Position = UDim2.new(0, 10, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "Kill Aura (≤100 Stud)"
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 15
+title.TextXAlignment = Enum.TextXAlignment.Left
+
+local close = Instance.new("TextButton", main)
+close.Size = UDim2.new(0, 30, 0, 30)
+close.Position = UDim2.new(1, -30, 0, 0)
+close.Text = "X"
+close.Font = Enum.Font.GothamBold
+close.TextSize = 16
+close.TextColor3 = Color3.new(1,1,1)
+close.BackgroundColor3 = Color3.fromRGB(170,40,40)
+
+local rangeBox = Instance.new("TextBox", main)
+rangeBox.Size = UDim2.new(1, -20, 0, 35)
+rangeBox.Position = UDim2.new(0, 10, 0, 45)
+rangeBox.Text = tostring(getgenv().KillRadius)
+rangeBox.PlaceholderText = "Range (max 100)"
+rangeBox.ClearTextOnFocus = false
+rangeBox.Font = Enum.Font.Gotham
+rangeBox.TextSize = 14
+rangeBox.TextColor3 = Color3.new(1,1,1)
+rangeBox.BackgroundColor3 = Color3.fromRGB(35,35,35)
+
+rangeBox.FocusLost:Connect(function()
+    local v = tonumber(rangeBox.Text)
+    if v then
+        getgenv().KillRadius = math.clamp(v, 1, 100)
+        rangeBox.Text = tostring(getgenv().KillRadius)
+    else
+        rangeBox.Text = tostring(getgenv().KillRadius)
+    end
+end)
+
+local toggle = Instance.new("TextButton", main)
+toggle.Size = UDim2.new(1, -20, 0, 40)
+toggle.Position = UDim2.new(0, 10, 0, 95)
+toggle.Font = Enum.Font.GothamBold
+toggle.TextSize = 15
+toggle.TextColor3 = Color3.new(1,1,1)
+
+local function refresh()
+    if getgenv().KillAura then
+        toggle.Text = "ON - Kill Aura"
+        toggle.BackgroundColor3 = Color3.fromRGB(60,170,60)
+    else
+        toggle.Text = "OFF - Kill Aura"
+        toggle.BackgroundColor3 = Color3.fromRGB(170,60,60)
+    end
+end
+refresh()
+
+toggle.MouseButton1Click:Connect(function()
+    getgenv().KillAura = not getgenv().KillAura
+    refresh()
+end)
+
+close.MouseButton1Click:Connect(function()
+    getgenv().G = false
+    getgenv().KillAura = false
+    despawnAura()
+    disableSimulation()
+    gui:Destroy()
+end)
